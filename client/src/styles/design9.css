@@ -1437,3 +1437,114 @@ button.d9-acc-toggle.is-open .d9-acc-hint::after { content: ' \2039'; }
 .d9-methods-split > button em { font-style: normal; font-size: var(--step--2); font-weight: 600; color: var(--muted); }
 .d9-methods-split > button strong { font-size: var(--step-1); font-weight: 700; letter-spacing: -0.03em; }
 .d9-methods-split > button small { font-size: var(--step--2); color: var(--muted); }
+
+/* --------------------------------------------------------------------------
+   Quick phrase entry ("Say it. Saved. Done.") — the one-line box under the
+   greeting. A pill input with a mic and an Add button; a small draft card
+   drops below it when a category or amount still needs the student's eye.
+-------------------------------------------------------------------------- */
+.qp { margin: 0.9rem 0 0; }
+
+.qp-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.35rem 0.35rem 0.85rem;
+  box-shadow: var(--shadow-1, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+.qp-bar > svg { color: var(--muted); flex: none; }
+
+.qp-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--step-0);
+  padding: 0.45rem 0;
+  outline: none;
+}
+.qp-input::placeholder { color: var(--muted); }
+
+.qp-mic,
+.qp-go {
+  flex: none;
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  font: inherit;
+}
+.qp-mic {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.qp-mic:hover { background: var(--line-strong); }
+.qp-mic.is-live {
+  background: var(--bad);
+  color: #fff;
+  animation: qp-pulse 1.1s ease-in-out infinite;
+}
+@keyframes qp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 47, 53, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(198, 47, 53, 0); }
+}
+
+.qp-go {
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+  padding: 0 1.1rem;
+  height: 2.4rem;
+}
+.qp-go:disabled { opacity: 0.5; cursor: default; }
+
+.qp-draft {
+  position: relative;
+  margin-top: 0.55rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.qp-draft-line { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; }
+.qp-draft-line strong { font-size: var(--step-1); font-weight: 700; letter-spacing: -0.02em; }
+.qp-draft-line strong.is-in { color: var(--good); }
+.qp-draft-line strong.is-out { color: var(--text); }
+.qp-draft-line span {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qp-draft-cat { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+.qp-draft-cat span { font-size: var(--step--1); color: var(--muted); }
+.qp-draft-cat select {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--r-control);
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+}
+.qp-draft-miss { margin: 0; color: var(--muted); font-size: var(--step--1); }
+.qp-draft-x {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  border-radius: 999px;
+}
+.qp-draft-x:hover { color: var(--text); }

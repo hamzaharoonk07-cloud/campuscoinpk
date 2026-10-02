@@ -91,10 +91,12 @@ export function ToastProvider({ children }) {
   const dismiss = useCallback((id) => setToasts((list) => list.filter((t) => t.id !== id)), []);
 
   const push = useCallback(
-    (title, { body = '', tone = 'info', ms = 4500 } = {}) => {
+    (title, { body = '', tone = 'info', ms = 4500, action = null } = {}) => {
       const id = Math.random().toString(36).slice(2);
-      setToasts((list) => [...list, { id, title, body, tone }]);
-      if (ms) setTimeout(() => dismiss(id), ms);
+      // An action (e.g. Undo) is given a little longer to be noticed and tapped.
+      const life = ms ?? (action ? 6000 : 4500);
+      setToasts((list) => [...list, { id, title, body, tone, action }]);
+      if (life) setTimeout(() => dismiss(id), life);
     },
     [dismiss]
   );
@@ -114,8 +116,23 @@ export function ToastProvider({ children }) {
       <div className="toasts" role="status" aria-live="polite">
         {toasts.map((toast) => (
           <div key={toast.id} className={`toast is-${toast.tone}`} onClick={() => dismiss(toast.id)}>
-            <strong>{toast.title}</strong>
-            {toast.body ? <span>{toast.body}</span> : null}
+            <div className="toast-text">
+              <strong>{toast.title}</strong>
+              {toast.body ? <span>{toast.body}</span> : null}
+            </div>
+            {toast.action ? (
+              <button
+                type="button"
+                className="toast-action"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toast.action.onClick();
+                  dismiss(toast.id);
+                }}
+              >
+                {toast.action.label}
+              </button>
+            ) : null}
           </div>
         ))}
       </div>

@@ -7,6 +7,7 @@ import { api } from '../lib/api.js';
 import { formatDate, money, monthKey, slotColor } from '../lib/format.js';
 import { markFor } from '../lib/methods.js';
 import CountUp from '../components/CountUp.jsx';
+import QuickPhrase from '../components/QuickPhrase.jsx';
 import { DonutChart, MonthBars } from '../components/DashCharts.jsx';
 import { artUrl, categoryArt, CategoryIcon, WalletArt } from '../components/Illustrations.jsx';
 import Avatar from '../components/Avatar.jsx';
@@ -338,6 +339,8 @@ export default function Dashboard() {
         currency={currency}
         onAdd={() => setAdding(true)}
       />
+
+      <QuickPhrase categories={categories} onSaved={load} />
 
       {announcements?.length ? (
         <div className="d9-notice">

@@ -59,6 +59,7 @@ const PATHS = {
   calendar: 'M5 5h14a1.5 1.5 0 0 1 1.5 1.5v12A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-12A1.5 1.5 0 0 1 5 5zM3.5 10h17M8 3v4M16 3v4',
   pie: 'M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12zM15 3.8V9h5.2A8.5 8.5 0 0 0 15 3.8z',
   more: 'M5.5 12h.01M12 12h.01M18.5 12h.01',
+  mic: 'M12 3.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7',
 };
 
 export default function Icon({ name, size = 18, strokeWidth = 1.75, className = '', ...rest }) {

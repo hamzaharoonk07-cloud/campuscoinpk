@@ -44,7 +44,7 @@ const transactionSchema = new mongoose.Schema(
     },
     recurringParent: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction', default: null },
 
-    source: { type: String, enum: ['manual', 'csv', 'recurring'], default: 'manual' },
+    source: { type: String, enum: ['manual', 'csv', 'recurring', 'phrase', 'sms'], default: 'manual' },
     // An optional photo of the receipt. Excluded from every query by default -
     // a page of 25 transactions must not carry 25 images - and fetched on its
     // own when the student opens it. hasReceipt lets lists show the icon.

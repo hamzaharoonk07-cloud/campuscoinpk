@@ -3,6 +3,7 @@ import Category from '../models/Category.js';
 import Transaction, { PAYMENT_METHODS } from '../models/Transaction.js';
 import { protect, wrap } from '../middleware/auth.js';
 import { learn, suggestBatch } from '../services/categorizer.js';
+import { parsePhrase } from '../services/phraseParser.js';
 import { detectFlags, describeFlag } from '../services/anomaly.js';
 import { checkBudgets, notifyAnomaly } from '../services/alerts.js';
 import { parseTransactionCsv, toCsv } from '../services/csv.js';
@@ -99,10 +100,30 @@ router.get(
   })
 );
 
+/**
+ * Reads a single typed or spoken phrase - "chai with friends 150" - into a
+ * draft transaction (amount, money in/out, description, suggested category)
+ * without saving anything. The student confirms, then the normal POST writes it.
+ */
+router.post(
+  '/parse',
+  wrap(async (req, res) => {
+    const phrase = String(req.body.phrase || '').trim();
+    if (!phrase) return res.status(400).json({ message: 'Type or say what you spent on' });
+    const draft = await parsePhrase({ userId: req.user._id, phrase });
+    if (draft.amount === null) {
+      return res.status(422).json({ message: "I couldn't find an amount - try \"chai 150\"", draft });
+    }
+    res.json({ draft });
+  })
+);
+
+const ALLOWED_SOURCES = new Set(['manual', 'phrase', 'sms']);
+
 router.post(
   '/',
   wrap(async (req, res) => {
-    const { categoryId, type, amount, description, note, date, recurring, aiSuggestedCategory, receipt, method, methodLabel } = req.body;
+    const { categoryId, type, amount, description, note, date, recurring, aiSuggestedCategory, receipt, method, methodLabel, source } = req.body;
 
     const category = await resolveCategory(req.user, categoryId);
     if (!category) return res.status(400).json({ message: 'Choose a category from your list' });
@@ -129,7 +150,7 @@ router.post(
       aiSuggestedCategory: aiSuggestedCategory || null,
       // Recorded so the AI page can report how often its guesses were kept.
       aiAccepted: aiSuggestedCategory ? String(aiSuggestedCategory) === String(category._id) : null,
-      source: 'manual',
+      source: ALLOWED_SOURCES.has(source) ? source : 'manual',
     });
 
     if (receipt) {
