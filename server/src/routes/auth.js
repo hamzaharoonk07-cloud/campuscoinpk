@@ -238,8 +238,11 @@ router.post(
   wrap(async (req, res) => {
     const key = crypto.randomBytes(24).toString('hex');
     req.user.webhookKeyHash = crypto.createHash('sha256').update(key).digest('hex');
+    // Which SIM/bank this is for - the student's own label, not checked
+    // against anything, so leaving it blank just means "unlabelled".
+    if (req.body.phone !== undefined) req.user.webhookPhone = String(req.body.phone || '').trim().slice(0, 20);
     await req.user.save();
-    res.json({ key });
+    res.json({ key, phone: req.user.webhookPhone });
   })
 );
 
@@ -249,7 +252,18 @@ router.get(
   protect,
   wrap(async (req, res) => {
     const user = await User.findById(req.user._id).select('+webhookKeyHash');
-    res.json({ active: Boolean(user.webhookKeyHash) });
+    res.json({ active: Boolean(user.webhookKeyHash), phone: user.webhookPhone || '' });
+  })
+);
+
+/** Relabels which SIM/bank the webhook is for, without rotating the key. */
+router.patch(
+  '/webhook-key',
+  protect,
+  wrap(async (req, res) => {
+    req.user.webhookPhone = String(req.body.phone || '').trim().slice(0, 20);
+    await req.user.save();
+    res.json({ phone: req.user.webhookPhone });
   })
 );
 

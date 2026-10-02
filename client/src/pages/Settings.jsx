@@ -27,10 +27,20 @@ function WebhookKey() {
   const toast = useToast();
   const [active, setActive] = useState(null);
   const [key, setKey] = useState('');
+  const [phone, setPhone] = useState('');
+  const [savedPhone, setSavedPhone] = useState('');
   const [busy, setBusy] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
 
   useEffect(() => {
-    api.get('/auth/webhook-key').then((d) => setActive(d.active)).catch(() => {});
+    api
+      .get('/auth/webhook-key')
+      .then((d) => {
+        setActive(d.active);
+        setPhone(d.phone || '');
+        setSavedPhone(d.phone || '');
+      })
+      .catch(() => {});
   }, []);
 
   const url = `${window.location.origin}/api/webhook/sms`;
@@ -38,14 +48,28 @@ function WebhookKey() {
   const generate = async () => {
     setBusy(true);
     try {
-      const { key: newKey } = await api.post('/auth/webhook-key', {});
+      const { key: newKey, phone: savedKeyPhone } = await api.post('/auth/webhook-key', { phone });
       setKey(newKey);
       setActive(true);
+      setSavedPhone(savedKeyPhone || '');
       toast.success('Key generated - copy it now, it will not be shown again');
     } catch (err) {
       toast.error('Could not generate a key', err.message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const savePhone = async () => {
+    setSavingPhone(true);
+    try {
+      const { phone: saved } = await api.patch('/auth/webhook-key', { phone });
+      setSavedPhone(saved || '');
+      toast.success('Label saved');
+    } catch (err) {
+      toast.error('Could not save that', err.message);
+    } finally {
+      setSavingPhone(false);
     }
   };
 
@@ -56,6 +80,28 @@ function WebhookKey() {
 
   return (
     <div className="webhook-key">
+      <div className="webhook-field">
+        <label>Which SIM or bank is this for?</label>
+        <div className="webhook-copy-row">
+          <input
+            placeholder="e.g. 0300-1234567 (HBL)"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            maxLength={20}
+            style={{ flex: 1, border: 0, background: 'transparent', font: 'inherit', color: 'inherit' }}
+          />
+          {active && phone !== savedPhone ? (
+            <button type="button" className="btn btn-sm" onClick={savePhone} disabled={savingPhone}>
+              {savingPhone ? 'Saving…' : 'Save'}
+            </button>
+          ) : null}
+        </div>
+        <p className="security-note is-quiet" style={{ marginTop: '0.3rem' }}>
+          A label for your own reference if you have more than one SIM or bank - not checked against the sender, since
+          the key is already what proves the message is yours.
+        </p>
+      </div>
+
       <div className="webhook-field">
         <label>Webhook URL</label>
         <div className="webhook-copy-row">

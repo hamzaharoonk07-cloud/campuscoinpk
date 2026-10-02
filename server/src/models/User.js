@@ -49,6 +49,10 @@ const userSchema = new mongoose.Schema(
     // Same pattern as the reset token above - only its hash is stored, the
     // real key is shown once, at generation.
     webhookKeyHash: { type: String, select: false },
+    // Which SIM/bank the forwarded SMS actually comes from - a label for the
+    // student's own reference (a multi-SIM phone, more than one bank), not
+    // something the webhook route checks against the sender.
+    webhookPhone: { type: String, trim: true, maxlength: 20, default: '' },
 
     // Sessions. Every sign-in token carries this number; raising it (on a new
     // password, or "sign out everywhere") makes every older token invalid.
