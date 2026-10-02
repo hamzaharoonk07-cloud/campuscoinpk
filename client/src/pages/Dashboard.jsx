@@ -95,19 +95,20 @@ function personalLine({ totals, goal, month, currency }) {
   const current = month === monthKey(now);
   if (!current) {
     return totals.balance >= 0
-      ? `You kept ${money(totals.balance, currency)} that month.`
-      : `That month ended ${money(-totals.balance, currency)} over.`;
+      ? `Kept ${money(totals.balance, currency)} that month.`
+      : `Ended ${money(-totals.balance, currency)} over that month.`;
   }
-  if (totals.income === 0 && totals.expense === 0) return 'A fresh month - log your allowance to get started.';
+  if (totals.income === 0 && totals.expense === 0) return 'Fresh month — log your allowance to start.';
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
-  const days = `${daysLeft} day${daysLeft === 1 ? '' : 's'} left this month`;
-  if (totals.balance < 0) return `${days}, and ${money(-totals.balance, currency)} over so far - a quiet week would close it.`;
+  const days = `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
+  if (totals.balance < 0) return `${money(-totals.balance, currency)} over — a quiet week closes it.`;
   // What can go out each day and still leave the savings goal intact.
   const spare = totals.balance - Math.max(0, goal.target || 0);
   if (goal.target > 0 && spare <= 0) {
-    return `${days}. You are ${money(-spare, currency)} short of your ${money(goal.target, currency)} goal, so hold spending where it is.`;
+    return `${money(-spare, currency)} short of your goal — hold steady.`;
   }
-  return `${days} - about ${money(Math.floor((goal.target > 0 ? spare : totals.balance) / daysLeft), currency)} a day to spend${goal.target > 0 ? ' and still hit your goal' : ''}.`;
+  const perDay = money(Math.floor((goal.target > 0 ? spare : totals.balance) / daysLeft), currency);
+  return `${perDay} a day · ${days}.`;
 }
 
 
