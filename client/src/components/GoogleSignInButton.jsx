@@ -29,7 +29,7 @@ function loadGoogleScript() {
   return scriptPromise;
 }
 
-export default function GoogleSignInButton({ bare = false }) {
+export default function GoogleSignInButton({ bare = false, shape = 'rectangular', theme = 'outline' }) {
   const { loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -60,11 +60,16 @@ export default function GoogleSignInButton({ bare = false }) {
           }
         },
       });
+      // Match the surrounding buttons: fill the container width (GSI needs a px
+      // value, 200-400), large, and the requested shape/theme.
+      const w = Math.max(200, Math.min(400, ref.current.clientWidth || 320));
       window.google.accounts.id.renderButton(ref.current, {
-        theme: 'outline',
+        theme,
         size: 'large',
-        width: 320,
+        width: w,
         text: 'continue_with',
+        shape,
+        logo_alignment: 'left',
       });
     });
 
