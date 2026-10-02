@@ -18,6 +18,15 @@ import { useAuth, useToast } from '../context/AppContext.jsx';
    sends it themselves.
 --------------------------------------------------------------------------- */
 
+// A stable colour for a person's initial avatar, from their name. Greens/blues
+// that sit well on the dark cards, so each person reads as their own "logo".
+const AVA_COLORS = ['#22c55e', '#5b91ff', '#15803d', '#0ea5a4', '#8b5cf6', '#f0b429', '#ef6a5e'];
+function avaColor(name) {
+  let h = 0;
+  for (let i = 0; i < (name || '').length; i += 1) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVA_COLORS[h % AVA_COLORS.length];
+}
+
 // Builds the wa.me link that opens WhatsApp with a reminder ready to send.
 function whatsappReminder(person, phone, amount, currency) {
   const digits = String(phone || '').replace(/[^\d]/g, '');
@@ -261,11 +270,16 @@ function PersonCard({ group, currency, onChange }) {
   return (
     <article className="udhaar-person">
       <header>
-        <div>
-          <strong>{group.person}</strong>
-          <span className={theyOweMe ? 'is-in' : 'is-out'}>
-            {theyOweMe ? 'owes you' : 'you owe'} {money(Math.abs(group.net), currency)}
+        <div className="udhaar-person-id">
+          <span className="udhaar-ava" style={{ background: avaColor(group.person) }} aria-hidden="true">
+            {(group.person || '?').trim().charAt(0).toUpperCase()}
           </span>
+          <div>
+            <strong>{group.person}</strong>
+            <span className={theyOweMe ? 'is-in' : 'is-out'}>
+              {theyOweMe ? 'owes you' : 'you owe'} {money(Math.abs(group.net), currency)}
+            </span>
+          </div>
         </div>
         {theyOweMe ? (
           <button type="button" className="udhaar-remind" onClick={() => setShowCard(true)}>
