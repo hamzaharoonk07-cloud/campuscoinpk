@@ -1,237 +1,365 @@
-import { useRef, useState } from 'react';
+/* Campus Coin welcome / onboarding — premium 4-step flow for first-time phone
+   visitors, ported from the approved reference designs.
+
+   How the premium-craft items are met:
+   - Depth/light: aurora (0.3x) + cards (1x) + orbit chips (1.4x) move apart on
+     pointer tilt; glass cards use a gradient (not flat) border + inner top
+     highlight; an inline feTurbulence grain overlay at ~9%; the 3D coin has a
+     moving specular highlight so the spin reads as metal.
+   - Motion: spring easings (entrances .16,1,.3,1; pops overshoot); 60-90ms
+     stagger; count-ups with tabular figures; step change re-keys the container so
+     entrances replay; swipe left/right + arrow keys change steps.
+   - Micro: CTA press scales + haptic (navigator.vibrate); typing caret; "Looks
+     like Food" pop; receipt scan beam; Coin answer streams word-by-word with a
+     cursor; stat chips count up.
+   - First impression: a 900ms branded intro (ring draws, dot drops) once per
+     device, skippable by tap; idle state only drifts/floats/shines.
+   - Reduced motion: everything renders in its finished state.
+   Hard-coded (no token fit on this dark surface): bg #09090c, greens/mints/blue/
+   amber per welcome.css header. */
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Icon from '../components/Icon.jsx';
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import '../styles/welcome.css';
 
-/* The opening of the app: a swipeable onboarding (welcome -> three feature
-   slides -> join), shown to anyone opening signed out. Everything is hand-drawn
-   with CSS/SVG so there are no screenshots to keep in sync and it stays crisp. */
+const SAMPLE = {
+  typed: 'Biryani with friends',
+  answer:
+    'Yes. After Rs 2,000 you would still have Rs 6,510 for the 29 days left, about Rs 224 a day. Semester & books is at 81%, so keep the rest of the week light.',
+  bars: [
+    { name: 'Food', spent: 3850, cap: 9000, color: '#22c55e' },
+    { name: 'Transport', spent: 1640, cap: 3500, color: '#5b91ff' },
+    { name: 'Semester & books', spent: 6500, cap: 8000, color: '#f5c46b' },
+  ],
+};
 
-/* The coin mark, used large on the hero and small as Coin's avatar. */
-function CoinMark({ size = 48 }) {
+const reduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const haptic = () => { try { navigator.vibrate && navigator.vibrate(8); } catch { /* unsupported */ } };
+
+// rAF seconds counter; resets when key changes. Freezes at a large value under
+// reduced motion so typing/streaming/count-ups render finished.
+function useElapsed(key) {
+  const [t, setT] = useState(reduced ? 999 : 0);
+  useEffect(() => {
+    if (reduced) { setT(999); return undefined; }
+    setT(0);
+    const t0 = Date.now();
+    let raf;
+    const tick = () => { const e = (Date.now() - t0) / 1000; setT(e); if (e < 8) raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [key]);
+  return t;
+}
+const easeOut = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+const countTo = (target, t, start, dur) => Math.round(target * easeOut((t - start) / dur));
+
+function CoinFace({ id }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+    <svg width="150" height="150" viewBox="0 0 48 48" aria-hidden="true">
       <defs>
-        <linearGradient id="wc-coin" x1="0.15" y1="0" x2="0.85" y2="1">
-          <stop offset="0" stopColor="#6ee7b7" />
-          <stop offset="0.5" stopColor="#22c55e" />
-          <stop offset="1" stopColor="#15803d" />
+        <linearGradient id={id} x1="0.15" y1="0" x2="0.85" y2="1">
+          <stop offset="0" stopColor="#6ee7b7" /><stop offset="0.5" stopColor="#22c55e" /><stop offset="1" stopColor="#15803d" />
         </linearGradient>
       </defs>
-      <circle cx="24" cy="24" r="24" fill="url(#wc-coin)" />
+      <circle cx="24" cy="24" r="24" fill={`url(#${id})`} />
+      <circle cx="24" cy="24" r="20.5" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="0.8" />
       <path d="M32.5 15.5A12 12 0 1 0 32.5 32.5" fill="none" stroke="#fff" strokeWidth="5.5" strokeLinecap="round" />
       <circle cx="24" cy="24" r="3.4" fill="#fff" />
     </svg>
   );
 }
+const BrandMark = ({ size = 30 }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+    <defs><linearGradient id="wlbm" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stopColor="#6ee7b7" /><stop offset="0.5" stopColor="#22c55e" /><stop offset="1" stopColor="#15803d" /></linearGradient></defs>
+    <circle cx="24" cy="24" r="24" fill="url(#wlbm)" />
+    <path d="M32.5 15.5A12 12 0 1 0 32.5 32.5" fill="none" stroke="#fff" strokeWidth="5.5" strokeLinecap="round" />
+    <circle cx="24" cy="24" r="3.4" fill="#fff" />
+  </svg>
+);
+const Arrow = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#052e16" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 
-const TopBar = ({ step, onSkip }) => (
-  <div className="ob-top">
-    <div className="ob-prog" aria-hidden="true">
-      <span className={step >= 1 ? 'on' : ''} />
-      <span className={step >= 2 ? 'on' : ''} />
-      <span className={step >= 3 ? 'on' : ''} />
+const TopBar = ({ feat, onSkip }) => (
+  <div className="wl-top" role="group" aria-label={`Step ${feat + 1} of 4`}>
+    <div className="wl-segs">
+      {[0, 1, 2].map((n) => (
+        <div key={n} className={`wl-seg${n < feat ? ' is-done' : ''}${n === feat ? ' is-active' : ''}`}><span className="wl-seg-fill" /></div>
+      ))}
     </div>
-    <button type="button" className="ob-skip" onClick={onSkip}>Skip</button>
+    <button type="button" className="wl-skip" onClick={onSkip}>Skip</button>
   </div>
 );
 
-/* --- Slide 1: the hero ---------------------------------------------------- */
-function SlideHero({ onStart, onLogin }) {
+/* ---- Step 1: hero -------------------------------------------------------- */
+function Hero({ onStart, onLogin, tilt }) {
+  const chip = (ic, bg, stroke, title, sub, pos, delay) => (
+    <div style={pos}>
+      <div className="wl-counter">
+        <div className="wl-chip wl-pop" style={{ animationDelay: `${delay}s` }}>
+          <span className="wl-chip-ic" style={{ background: bg }}>{ic(stroke)}</span>
+          <span className="wl-chip-txt"><b>{title}</b><em>{sub}</em></span>
+        </div>
+      </div>
+    </div>
+  );
+  const bowl = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-1.5 1-1.5 1-3M12 7c0-1.5 1-1.5 1-3M16 7c0-1.5 1-1.5 1-3" /></svg>;
+  const car = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 16V11l2-4h10l2 4v5M5 16h14M5 16v2M19 16v2" /><circle cx="8.5" cy="13.5" r="1" /><circle cx="15.5" cy="13.5" r="1" /></svg>;
+  const book = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7" /></svg>;
   return (
-    <section className="ob-slide">
-      <div className="ob-head">
-        <div className="ob-brand"><CoinMark size={34} /><b>Campus Coin</b></div>
-        <span className="ob-pill-free">Free for students</span>
+    <div className="wl-step is-enter">
+      <div className="wl-brandrow wl-up" style={{ animationDelay: '0.1s' }}>
+        <div className="wl-brand"><BrandMark size={30} /><b>Campus Coin</b></div>
+        <span className="wl-free">Free for students</span>
       </div>
-
-      <div className="ob-hero-art" aria-hidden="true">
-        <span className="ob-ring" /><span className="ob-ring ob-ring2" />
-        <div className="ob-coin3d"><CoinMark size={120} /></div>
-        <div className="ob-chip ob-chip-a">
-          <span className="ob-chip-ic" style={{ background: '#1e7d50' }}>🍜</span>
-          <span><b>Saved Rs 450</b><em>Biryani with friends</em></span>
+      <div className="wl-hero" style={{ transform: tilt }}>
+        <div className="wl-pulse" /><div className="wl-pulse" style={{ animationDelay: '1.2s' }} />
+        <div className="wl-ring-dashed" />
+        <div className="wl-orbit">
+          {chip(bowl, '#4ade80', '#052e16', 'Saved Rs 450', 'Biryani with friends', { position: 'absolute', left: 150, top: -26 }, 0.9)}
+          {chip(car, '#8fb3ff', '#0b1b4a', 'Careem ride Rs 320', 'Transport', { position: 'absolute', left: -14, top: 236 }, 1.1)}
+          {chip(book, '#f5c46b', '#3a2600', 'Semester fee', 'Planned for Oct', { position: 'absolute', left: 190, top: 215 }, 1.3)}
         </div>
-        <div className="ob-chip ob-chip-b">
-          <span className="ob-chip-ic" style={{ background: '#caa23a' }}>🧾</span>
-          <span><b>Semester fee</b><em>Planned for Oct</em></span>
-        </div>
-        <div className="ob-chip ob-chip-c">
-          <span className="ob-chip-ic" style={{ background: '#5b91ff' }}>🚗</span>
-          <span><b>Careem ride Rs 320</b><em>Transport</em></span>
+        <div className="wl-coinwrap">
+          <div className="wl-coin3d">
+            <div className="wl-coinface"><div className="wl-coin-rim" /><div style={{ position: 'relative' }}><CoinFace id="wlf" /><div className="wl-coin-sheen" /></div><div className="wl-spec" /></div>
+            <div className="wl-coinface is-back"><div className="wl-coin-rim" /><div style={{ position: 'relative' }}><CoinFace id="wlb" /><div className="wl-coin-sheen" /></div><div className="wl-spec" /></div>
+          </div>
         </div>
       </div>
-
-      <div className="ob-copy">
-        <h1 className="ob-h1">Say it.<br />Saved.<br /><span className="g">Done.</span></h1>
-        <p className="ob-sub">The money app for university students in Pakistan. Chai, rickshaws, rent and allowance in one calm place.</p>
+      <div className="wl-foot">
+        <h1 className="wl-h1">
+          <span className="wl-shim" style={{ animationDelay: '0.4s, 0s' }}>Say it.</span>
+          <span className="wl-shim" style={{ animationDelay: '0.58s, 0.4s' }}>Saved.</span>
+          <span className="wl-up wl-accentword" style={{ animationDelay: '0.9s' }}>Done.</span>
+        </h1>
+        <p className="wl-sub wl-up" style={{ animationDelay: '1.05s' }}>The money app for university students in Pakistan. Chai, rickshaws, rent and allowance in one calm place.</p>
+        <div style={{ height: 4 }} />
+        <button type="button" className="wl-cta wl-up" style={{ animationDelay: '1.2s' }} onClick={() => { haptic(); onStart(); }}>Get started<Arrow /><span className="wl-shine" /></button>
+        <button type="button" className="wl-link wl-up" style={{ animationDelay: '1.35s' }} onClick={onLogin}>I already have an account</button>
       </div>
-      <div className="ob-cta">
-        <button type="button" className="ob-btn ob-btn-primary" onClick={onStart}>Get started <Icon name="arrow-ne" size={18} /></button>
-        <button type="button" className="ob-link" onClick={onLogin}>I already have an account</button>
-      </div>
-    </section>
+    </div>
   );
 }
 
-/* --- Slide 2: log it in seconds ------------------------------------------ */
-function SlideLog({ step, onNext, onSkip }) {
+/* ---- Step 2: log it ----------------------------------------------------- */
+function Log({ feat, onNext, onSkip }) {
+  const t = useElapsed('log');
+  const typed = SAMPLE.typed.slice(0, Math.floor(easeOut((t - 0.3) / 1.0) * SAMPLE.typed.length));
+  const doneTyping = typed.length >= SAMPLE.typed.length;
   return (
-    <section className="ob-slide">
-      <TopBar step={step} onSkip={onSkip} />
-      <div className="ob-art">
-        <div className="ob-card ob-input-card">
-          <div className="ob-row-between"><span className="ob-muted">What was it?</span><span className="ob-smart"><Icon name="spark" size={13} /> Smart category</span></div>
-          <div className="ob-input"><span>Biryani with friends</span><b>Rs 450</b></div>
-          <span className="ob-looks"><Icon name="spark" size={12} /> Looks like <b>Food</b></span>
-        </div>
-        <div className="ob-saved">
-          <span className="ob-saved-ic">🍲</span>
-          <span className="ob-saved-t"><b>Biryani with friends</b><em>Food, today 1:30 pm</em></span>
-          <span className="ob-saved-amt"><b><i>−Rs</i> 450</b><span className="ob-saved-tag">Saved</span></span>
-        </div>
-        <div className="ob-receipt-row">
-          <div className="ob-receipt">
-            <div className="ob-r-head">STUDENT STATIONERS</div>
-            <div className="ob-r-date">28/09/2026</div>
-            <div className="ob-r-line"><span>Notes copy</span><span>120.00</span></div>
-            <div className="ob-r-line"><span>Lab file</span><span>350.00</span></div>
-            <div className="ob-r-line"><span>Pens x3</span><span>90.00</span></div>
-            <div className="ob-r-total"><span>TOTAL</span><span>560.00</span></div>
+    <div className="wl-step is-enter">
+      <TopBar feat={feat} onSkip={onSkip} />
+      <div className="wl-art" style={{ marginTop: 18 }}>
+        <div className="wl-glass wl-inputcard wl-up">
+          <div className="wl-rowbtw"><span className="wl-muted">What was it?</span><span className="wl-smart">✦ Smart category</span></div>
+          <div className="wl-input">
+            <span className="wl-input-txt">{typed}{!doneTyping && !reduced ? <span className="wl-caret" /> : ''}</span>
+            <span className="wl-input-amt" style={{ opacity: doneTyping ? 1 : 0, transition: 'opacity .3s' }}>Rs 450</span>
           </div>
-          <div className="ob-r-cards">
-            <div className="ob-r-card"><span className="ob-muted">Total</span><b>Rs 560</b></div>
-            <div className="ob-r-card"><span className="ob-muted">Shop</span><b>Student Stationers</b></div>
-            <div className="ob-r-card"><span className="ob-muted">Date</span><b>28 Sept</b></div>
+          {(doneTyping || reduced) ? <span className="wl-looks wl-pop">✦ Looks like <b>Food</b></span> : null}
+        </div>
+        <div className="wl-saved wl-fly" style={{ animationDelay: '1.4s' }}>
+          <span className="wl-saved-ic">🍲</span>
+          <span className="wl-saved-t"><b>Biryani with friends</b><em>Food, today 1:30 pm</em></span>
+          <span className="wl-saved-amt"><b><i>−Rs</i> 450</b><span className="wl-saved-tag">Saved</span></span>
+        </div>
+        <div className="wl-receipt-row">
+          <div className="wl-receipt wl-up" style={{ animationDelay: '1.6s' }}>
+            {!reduced ? <span className="wl-beam" /> : null}
+            <div className="wl-rhead">STUDENT STATIONERS</div>
+            <div className="wl-rdate">28/09/2026</div>
+            <div className="wl-rline"><span>Notes copy</span><span>120.00</span></div>
+            <div className="wl-rline"><span>Lab file</span><span>350.00</span></div>
+            <div className="wl-rline"><span>Pens x3</span><span>90.00</span></div>
+            <div className="wl-rtotal"><span>TOTAL</span><span>560.00</span></div>
+          </div>
+          <div className="wl-rcards">
+            {[['Total', 'Rs 560', 2.0], ['Shop', 'Student Stationers', 2.2], ['Date', '28 Sept', 2.4]].map(([l, v, d]) => (
+              <div key={l} className="wl-glass wl-rcard wl-pop" style={{ animationDelay: `${d}s` }}><span>{l}</span><b>{v}</b></div>
+            ))}
           </div>
         </div>
       </div>
-      <div className="ob-copy">
-        <h2 className="ob-h2">Log it in <span className="g">seconds.</span></h2>
-        <p className="ob-sub">Type it and Campus Coin picks the category. Snap a receipt and it reads the total, shop and date, right on your phone.</p>
+      <div className="wl-foot">
+        <h2 className="wl-h2"><span>Log it in <span className="wl-mintword">seconds.</span></span></h2>
+        <p className="wl-sub">Type it and Campus Coin picks the category. Snap a receipt and it reads the total, shop and date, right on your phone.</p>
+        <div style={{ height: 4 }} />
+        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Next<Arrow /><span className="wl-shine" /></button>
       </div>
-      <div className="ob-cta"><button type="button" className="ob-btn ob-btn-primary" onClick={onNext}>Next <Icon name="arrow-ne" size={18} /></button></div>
-    </section>
+    </div>
   );
 }
 
-/* --- Slide 3: see where it goes ------------------------------------------ */
-function SlideBudget({ step, onNext, onSkip }) {
-  const bars = [
-    ['Food', 'Rs 3,850 of 9,000', 43, '#22c55e'],
-    ['Transport', 'Rs 1,640 of 3,500', 47, '#5b91ff'],
-    ['Semester & books', 'Rs 6,500 of 8,000', 81, '#f0b429'],
-  ];
+/* ---- Step 3: budget ----------------------------------------------------- */
+function Budget({ feat, onNext, onSkip }) {
+  const t = useElapsed('budget');
+  const avail = reduced ? 8510 : countTo(8510, t, 0.4, 1.4);
   return (
-    <section className="ob-slide">
-      <TopBar step={step} onSkip={onSkip} />
-      <div className="ob-art">
-        <div className="ob-card ob-budget">
-          <div className="ob-budget-head">
-            <div className="ob-ring58"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="7" /><circle cx="40" cy="40" r="34" fill="none" stroke="#22c55e" strokeWidth="7" strokeLinecap="round" strokeDasharray="124 214" transform="rotate(-90 40 40)" /></svg><span><b>58%</b><em>used</em></span></div>
-            <div className="ob-budget-fig"><span className="ob-muted">Still available in October</span><div className="ob-big"><i>Rs</i> 8,510</div><span className="ob-amber-pill">Semester at 81%</span></div>
-          </div>
-          {bars.map(([name, amt, pct, col]) => (
-            <div className="ob-bar" key={name}>
-              <div className="ob-row-between"><b>{name}</b><span className="ob-muted">{amt}</span></div>
-              <div className="ob-bartrack"><span style={{ width: `${pct}%`, background: col }} /></div>
+    <div className="wl-step is-enter">
+      <TopBar feat={feat} onSkip={onSkip} />
+      <div className="wl-art" style={{ marginTop: 18 }}>
+        <div className="wl-glass wl-budget wl-up">
+          <div className="wl-budget-head">
+            <div className="wl-ring"><span><b>58%</b><em>used</em></span></div>
+            <div className="wl-budget-fig">
+              <span className="wl-muted">Still available in October</span>
+              <div className="wl-big"><i>Rs</i> {fmt(avail)}</div>
+              <span className="wl-amber">Semester at 81%</span>
             </div>
-          ))}
+          </div>
+          {SAMPLE.bars.map((b, i) => {
+            const pct = (b.spent / b.cap) * 100;
+            const val = reduced ? b.spent : countTo(b.spent, t, 0.4 + i * 0.15, 1.2);
+            return (
+              <div className="wl-bar" key={b.name}>
+                <div className="wl-rowbtw"><b>{b.name}</b><span className="wl-muted"><span className="wl-rs">Rs</span>{fmt(val)} of {fmt(b.cap)}</span></div>
+                <div className="wl-bartrack"><div className="wl-barfill" style={{ width: `${pct}%`, background: b.color, animationDelay: `${0.3 + i * 0.15}s`, '--wl-final': `${pct}%` }} /></div>
+              </div>
+            );
+          })}
         </div>
-        <div className="ob-card ob-week">
-          <div className="ob-row-between"><b>This week</b><span className="ob-muted">Mon to Fri</span></div>
-          <svg className="ob-spark" viewBox="0 0 300 90" preserveAspectRatio="none">
-            <defs><linearGradient id="wc-wk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#22c55e" stopOpacity="0.3" /><stop offset="1" stopColor="#22c55e" stopOpacity="0" /></linearGradient></defs>
-            <path d="M8 62 C40 44,60 40,95 54 C130 68,150 70,190 52 C230 34,255 24,292 14 L292 90 L8 90 Z" fill="url(#wc-wk)" />
-            <path d="M8 62 C40 44,60 40,95 54 C130 68,150 70,190 52 C230 34,255 24,292 14" fill="none" stroke="#3ddc84" strokeWidth="3" strokeLinecap="round" />
-            <circle cx="292" cy="14" r="5" fill="#3ddc84" />
+        <div className="wl-glass wl-week wl-up" style={{ animationDelay: '0.3s' }}>
+          <div className="wl-rowbtw"><b>This week</b><span className="wl-muted">Mon to Fri</span></div>
+          <svg className="wl-spark" viewBox="0 0 300 90" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="wlwk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#22c55e" stopOpacity="0.3" /><stop offset="1" stopColor="#22c55e" stopOpacity="0" /></linearGradient></defs>
+            <path d="M8 62 C40 44,60 40,95 54 C130 68,150 70,190 52 C230 34,255 24,292 14 L292 90 L8 90 Z" fill="url(#wlwk)" opacity="0.9" className="wl-fade" style={{ animationDelay: '1.2s' }} />
+            <path className="wl-sparkline" d="M8 62 C40 44,60 40,95 54 C130 68,150 70,190 52 C230 34,255 24,292 14" fill="none" stroke="#3ddc84" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="292" cy="14" r="5" fill="#3ddc84" className="wl-fade" style={{ animationDelay: '2s' }} />
           </svg>
         </div>
       </div>
-      <div className="ob-copy">
-        <h2 className="ob-h2">See where it <span className="g">goes.</span></h2>
-        <p className="ob-sub">Set a cap for each category. Campus Coin tells you once at 80% and once if you go over, never on every purchase.</p>
+      <div className="wl-foot">
+        <h2 className="wl-h2"><span>See where it <span className="wl-mintword">goes.</span></span></h2>
+        <p className="wl-sub">Set a cap for each category. Campus Coin tells you once at 80% and once if you go over, never on every purchase.</p>
+        <div style={{ height: 4 }} />
+        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Next<Arrow /><span className="wl-shine" /></button>
       </div>
-      <div className="ob-cta"><button type="button" className="ob-btn ob-btn-primary" onClick={onNext}>Next <Icon name="arrow-ne" size={18} /></button></div>
-    </section>
+    </div>
   );
 }
 
-/* --- Slide 4: ask Coin --------------------------------------------------- */
-function SlideCoin({ step, onNext, onSkip }) {
+/* ---- Step 4: Ask Coin --------------------------------------------------- */
+function Coin({ feat, onNext, onSkip }) {
+  const t = useElapsed('coin');
+  const words = SAMPLE.answer.split(' ');
+  const showTyping = !reduced && t < 1.1;
+  const shown = reduced ? words.length : Math.floor(Math.max(0, (t - 1.1)) / 0.07);
+  const streaming = shown < words.length && !reduced;
+  const answer = reduced ? SAMPLE.answer : words.slice(0, shown).join(' ');
+  const statsT = Math.max(0, t - (1.1 + words.length * 0.07) - 0.2);
+  const tiles = [
+    ['Left now', countTo(8510, statsT, 0, 0.9), false],
+    ['After 2,000', countTo(6510, statsT, 0.1, 0.9), false],
+    ['Per day', countTo(224, statsT, 0.2, 0.9), true],
+  ];
   return (
-    <section className="ob-slide">
-      <TopBar step={step} onSkip={onSkip} />
-      <div className="ob-art">
-        <div className="ob-coin-head"><span className="ob-coin-av"><CoinMark size={54} /></span><span><b>Coin</b><em><i className="ob-dot" /> Answers from your own money</em></span></div>
-        <div className="ob-q">Can I afford biryani night for 4?</div>
-        <div className="ob-a">Yes. After Rs 2,000 you would still have Rs 6,510 for the 29 days left, about Rs 224 a day. Semester &amp; books is at 81%, so keep the rest of the week light.</div>
-        <div className="ob-tiles">
-          <div className="ob-tile"><span className="ob-muted">Left now</span><b><i>Rs</i> 8,510</b></div>
-          <div className="ob-tile"><span className="ob-muted">After 2,000</span><b><i>Rs</i> 6,510</b></div>
-          <div className="ob-tile"><span className="ob-muted">Per day</span><b className="g"><i>Rs</i> 224</b></div>
+    <div className="wl-step is-enter">
+      <TopBar feat={feat} onSkip={onSkip} />
+      <div className="wl-art" style={{ marginTop: 18 }}>
+        <div className="wl-coinhead wl-up">
+          <span className="wl-halo"><BrandMark size={32} /></span>
+          <span><b>Coin</b><em><i className="wl-dotgreen" /> Answers from your own money</em></span>
         </div>
-        <p className="ob-lock">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-          Coin only uses the numbers you have logged.
-        </p>
+        <div className="wl-qbubble wl-pop" style={{ animationDelay: '0.3s' }}>Can I afford biryani night for 4?</div>
+        <div className="wl-glass wl-abubble" aria-live="polite">
+          {showTyping ? <span className="wl-dots"><i /><i /><i /></span> : <>{answer}{streaming ? <span className="wl-cursor" /> : ''}</>}
+        </div>
+        <div className="wl-tiles">
+          {tiles.map(([l, v, g]) => (
+            <div key={l} className="wl-glass wl-tile"><span>{l}</span><b className={g ? 'g' : ''}><span className="wl-rs">Rs</span>{fmt(v)}</b></div>
+          ))}
+        </div>
+        <p className="wl-lock">🔒 Coin only uses the numbers you have logged.</p>
       </div>
-      <div className="ob-copy">
-        <h2 className="ob-h2">Ask Coin <span className="g">anything.</span></h2>
-        <p className="ob-sub">Can you afford it? Where did the money go? Coin answers in plain words, from your own spending.</p>
+      <div className="wl-foot">
+        <h2 className="wl-h2"><span>Ask Coin <span className="wl-mintword">anything.</span></span></h2>
+        <p className="wl-sub">Can you afford it? Where did the money go? Coin answers in plain words, from your own spending.</p>
+        <div style={{ height: 4 }} />
+        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Create my account<Arrow /><span className="wl-shine" /></button>
       </div>
-      <div className="ob-cta"><button type="button" className="ob-btn ob-btn-primary" onClick={onNext}>Create my account <Icon name="arrow-ne" size={18} /></button></div>
-    </section>
+    </div>
   );
 }
 
-/* --- Slide 5: join (the ways in) ----------------------------------------- */
-function SlideJoin({ onPhone, onEmail, onLogin }) {
+/* ---- Step 5: join ------------------------------------------------------- */
+function Join({ onPhone, onEmail, onLogin }) {
   return (
-    <section className="ob-slide ob-join">
-      <div className="ob-brand ob-brand-center"><CoinMark size={40} /><b>Campus Coin</b></div>
-      <h2 className="ob-h2 ob-join-h">Create your <span className="g">account</span></h2>
-      <p className="ob-sub ob-center">Pick the way that suits you. It takes seconds.</p>
-      <div className="ob-cta ob-join-cta">
-        <button type="button" className="ob-btn ob-btn-primary" onClick={onPhone}><Icon name="user" size={18} /> Continue with phone number</button>
-        <div className="ob-google"><GoogleSignInButton bare /></div>
-        <button type="button" className="ob-btn ob-btn-ghost" onClick={onEmail}>Sign up with email</button>
-        <button type="button" className="ob-link" onClick={onLogin}>I already have an account</button>
-      </div>
-    </section>
+    <div className="wl-step is-enter wl-join">
+      <div className="wl-brand" style={{ justifyContent: 'center', marginBottom: 18 }}><BrandMark size={38} /><b style={{ fontSize: 22 }}>Campus Coin</b></div>
+      <h2 className="wl-h2" style={{ textAlign: 'center', fontSize: 34 }}>Create your <span className="wl-accentword">account</span></h2>
+      <p className="wl-sub" style={{ textAlign: 'center', margin: '8px auto 18px' }}>Pick the way that suits you. It takes seconds.</p>
+      <button type="button" className="wl-cta" onClick={() => { haptic(); onPhone(); }}>Continue with phone number<span className="wl-shine" /></button>
+      <div className="wl-google"><GoogleSignInButton bare /></div>
+      <button type="button" className="wl-ghost" onClick={onEmail}>Sign up with email</button>
+      <button type="button" className="wl-link" onClick={onLogin}>I already have an account</button>
+    </div>
   );
 }
 
 export default function Welcome() {
   const navigate = useNavigate();
-  const [i, setI] = useState(0);
-  const track = useRef(null);
-  const start = useRef(0);
+  const [step, setStep] = useState(0);
+  const [tilt, setTilt] = useState('');
+  const [intro, setIntro] = useState(() => {
+    if (reduced) return false;
+    try { return !localStorage.getItem('campuscoin.introseen'); } catch { return true; }
+  });
+  const startX = useRef(0);
 
-  const go = (n) => setI(Math.max(0, Math.min(4, n)));
-  const onTouchStart = (e) => { start.current = e.touches[0].clientX; };
-  const onTouchEnd = (e) => {
-    const dx = e.changedTouches[0].clientX - start.current;
-    if (dx < -45) go(i + 1);
-    else if (dx > 45) go(i - 1);
-  };
+  useEffect(() => {
+    if (!intro) return undefined;
+    try { localStorage.setItem('campuscoin.introseen', '1'); } catch { /* ignore */ }
+    const id = setTimeout(() => setIntro(false), 1350);
+    return () => clearTimeout(id);
+  }, [intro]);
+
+  // Mark the visitor welcomed when they reach the join step or leave the flow.
+  const markWelcomed = () => { try { localStorage.setItem('campuscoin.welcomed', '1'); } catch { /* ignore */ } };
+  const go = (n) => { const c = Math.max(0, Math.min(4, n)); if (c === 4) markWelcomed(); setStep(c); };
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'ArrowRight') go(step + 1); else if (e.key === 'ArrowLeft') go(step - 1); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step]);
+
+  const onTouchStart = (e) => { startX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => { const dx = e.changedTouches[0].clientX - startX.current; if (dx < -45) go(step + 1); else if (dx > 45) go(step - 1); };
+  const onMove = (e) => { const r = e.currentTarget.getBoundingClientRect(); const x = ((e.clientX - r.left) / r.width - 0.5) * 8; const y = -((e.clientY - r.top) / r.height - 0.5) * 8; setTilt(`perspective(900px) rotateX(${y.toFixed(1)}deg) rotateY(${x.toFixed(1)}deg)`); };
+  const onLeave = () => setTilt('');
+
+  const toLogin = () => { markWelcomed(); navigate('/login'); };
+  const toRegister = () => { markWelcomed(); navigate('/register'); };
+  const toPhone = () => { markWelcomed(); navigate('/phone'); };
 
   return (
-    <main className="ob">
-      <div
-        className="ob-track"
-        ref={track}
-        style={{ transform: `translateX(-${i * 100}%)` }}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <SlideHero onStart={() => go(1)} onLogin={() => navigate('/login')} />
-        <SlideLog step={1} onNext={() => go(2)} onSkip={() => go(4)} />
-        <SlideBudget step={2} onNext={() => go(3)} onSkip={() => go(4)} />
-        <SlideCoin step={3} onNext={() => go(4)} onSkip={() => go(4)} />
-        <SlideJoin onPhone={() => navigate('/phone')} onEmail={() => navigate('/register')} onLogin={() => navigate('/login')} />
+    <main className="wl" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onPointerMove={onMove} onPointerLeave={onLeave}>
+      <div className="wl-bg" style={{ transform: tilt ? 'translate(var(--d))' : undefined }}>
+        <div className="wl-aur wl-aur1" /><div className="wl-aur wl-aur2" /><div className="wl-aur wl-aur3" />
+        <div className="wl-dots" />
+        <svg className="wl-grain" width="390" height="844" aria-hidden="true"><filter id="wlgrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" /></filter><rect width="390" height="844" filter="url(#wlgrain)" /></svg>
+        <div className="wl-vig" />
       </div>
+
+      <div key={step} style={{ display: 'contents' }}>
+        {step === 0 && <Hero onStart={() => go(1)} onLogin={toLogin} tilt={tilt} />}
+        {step === 1 && <Log feat={0} onNext={() => go(2)} onSkip={() => go(4)} />}
+        {step === 2 && <Budget feat={1} onNext={() => go(3)} onSkip={() => go(4)} />}
+        {step === 3 && <Coin feat={2} onNext={() => go(4)} onSkip={() => go(4)} />}
+        {step === 4 && <Join onPhone={toPhone} onEmail={toRegister} onLogin={toLogin} />}
+      </div>
+
+      {intro ? (
+        <div className="wl-intro" onClick={() => setIntro(false)}>
+          <div className="wl-intro-glow" />
+          <svg className="wl-introcoin" width="120" height="120" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="22" fill="none" stroke="#22c55e" strokeWidth="1.2" opacity="0.5" />
+            <path className="wl-ringdraw" d="M32.5 15.5A12 12 0 1 0 32.5 32.5" fill="none" stroke="#fff" strokeWidth="5.5" strokeLinecap="round" />
+            <circle className="wl-drop" cx="24" cy="24" r="3.4" fill="#fff" />
+          </svg>
+        </div>
+      ) : null}
     </main>
   );
 }

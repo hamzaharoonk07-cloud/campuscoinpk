@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Icon, { BrandMark, Wordmark } from '../components/Icon.jsx';
 import { SITEMAP } from './Sitemap.jsx';
 import { ArtIcon, artUrl, ChartArt, ChatArt, ReceiptArt, WalletArt } from '../components/Illustrations.jsx';
@@ -446,6 +446,16 @@ const FAQ = [
 ];
 
 export default function Landing() {
+  const navigate = useNavigate();
+  // First phone visit lands on the welcome/onboarding once; desktop and repeat
+  // visits keep this marketing page.
+  useEffect(() => {
+    try {
+      if (window.innerWidth <= 640 && !localStorage.getItem('campuscoin.welcomed')) {
+        navigate('/welcome', { replace: true });
+      }
+    } catch { /* storage blocked - just stay on the landing */ }
+  }, [navigate]);
   const page = useRef(null);
   const hero = useRef(null);
   const [tab, setTab] = useState(TABS[0].key);
