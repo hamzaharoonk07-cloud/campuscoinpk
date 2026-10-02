@@ -1506,7 +1506,7 @@ button.d9-acc-toggle.is-open .d9-acc-hint::after { content: ' \2039'; }
 
 .qp-go {
   background: var(--accent);
-  color: var(--accent-text);
+  color: var(--on-accent);
   font-weight: 600;
   padding: 0 1.1rem;
   height: 2.4rem;
