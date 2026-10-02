@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import express from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
+import PhoneOtp from '../models/PhoneOtp.js';
+import { sendSms, smsConfigured } from '../services/sms.js';
 import { protect, signToken, wrap } from '../middleware/auth.js';
 import { sendMail, mailConfigured, screenResetLinkAllowed } from '../services/mailer.js';
 import { cleanImage } from '../utils/images.js';
@@ -562,6 +564,113 @@ router.get('/mail-status', (req, res) => res.json({ configured: mailConfigured()
 /** Whether Google sign-in is set up, and the client ID to render the button
  *  with - public by design, the same way any OAuth client ID is. */
 router.get('/google-status', (req, res) => res.json({ configured: Boolean(googleClient), clientId: process.env.GOOGLE_CLIENT_ID || null }));
+
+/* ------------------------------------------------------------------------- *
+ *  Phone-number sign-in (OTP)
+ *
+ *  A code is texted to the number and exchanged for a session. A number with no
+ *  account yet gets one created on first verify (profileComplete:false, so the
+ *  app then collects a name and shows the tour). Only the hash of the code is
+ *  stored, it expires in 10 minutes, and five wrong tries burn it.
+ * ------------------------------------------------------------------------- */
+
+const OTP_TTL_MIN = 10;
+const OTP_MAX_ATTEMPTS = 5;
+const OTP_RESEND_SECONDS = 30;
+const otpTestMode = () => process.env.PHONE_OTP_TEST_MODE === '1';
+const hashOtp = (code) => crypto.createHash('sha256').update(String(code)).digest('hex');
+
+/** Normalise to +E.164, defaulting a bare/0-led number to Pakistan (+92). */
+function normalizePhone(raw) {
+  let s = String(raw || '').replace(/[^\d+]/g, '');
+  if (!s) return '';
+  if (s.startsWith('+')) return s;
+  if (s.startsWith('00')) return `+${s.slice(2)}`;
+  if (s.startsWith('0')) return `+92${s.slice(1)}`;
+  if (s.startsWith('92')) return `+${s}`;
+  return `+92${s}`;
+}
+
+router.get('/phone-status', (req, res) =>
+  res.json({ configured: smsConfigured() || otpTestMode(), testMode: otpTestMode() })
+);
+
+router.post(
+  '/phone/start',
+  wrap(async (req, res) => {
+    const phone = normalizePhone(req.body.phone);
+    if (phone.replace(/\D/g, '').length < 10) {
+      return res.status(400).json({ message: 'Enter a valid phone number' });
+    }
+    const existing = await PhoneOtp.findOne({ phone });
+    if (existing && Date.now() - new Date(existing.lastSentAt).getTime() < OTP_RESEND_SECONDS * 1000) {
+      const wait = Math.ceil((OTP_RESEND_SECONDS * 1000 - (Date.now() - new Date(existing.lastSentAt).getTime())) / 1000);
+      return res.status(429).json({ message: `Please wait ${wait}s before requesting another code` });
+    }
+
+    const code = String(crypto.randomInt(100000, 1000000));
+    await PhoneOtp.findOneAndUpdate(
+      { phone },
+      { phone, codeHash: hashOtp(code), expires: new Date(Date.now() + OTP_TTL_MIN * 60000), attempts: 0, lastSentAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    const result = await sendSms(phone, `${code} is your Campus Coin verification code. It expires in ${OTP_TTL_MIN} minutes.`);
+    // In test mode (no paid SMS yet) the code is returned so the flow can be
+    // exercised end to end. NEVER enable PHONE_OTP_TEST_MODE in real production.
+    const payload = { sent: result.sent };
+    if (!result.sent && !otpTestMode()) {
+      payload.message = 'Text messaging is not set up yet. Try Google or email for now.';
+    }
+    if (otpTestMode()) payload.devCode = code;
+    res.json(payload);
+  })
+);
+
+router.post(
+  '/phone/verify',
+  wrap(async (req, res) => {
+    const phone = normalizePhone(req.body.phone);
+    const code = String(req.body.code || '').trim();
+    const otp = await PhoneOtp.findOne({ phone });
+    if (!otp || otp.expires < new Date()) {
+      return res.status(401).json({ message: 'That code has expired. Request a new one.' });
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      await otp.deleteOne();
+      return res.status(429).json({ message: 'Too many wrong tries. Request a new code.' });
+    }
+    if (otp.codeHash !== hashOtp(code)) {
+      otp.attempts += 1;
+      await otp.save();
+      return res.status(401).json({ message: 'That code is not right' });
+    }
+    await otp.deleteOne();
+
+    let user = await User.findOne({ authPhone: phone });
+    let isNew = false;
+    if (!user) {
+      isNew = true;
+      // A placeholder @campuscoin.app address satisfies the required+unique email
+      // without ever being mailed (that domain is skipped by the mailer path). The
+      // student sets a real name next through RequireProfile (profileComplete:false).
+      user = await User.create({
+        name: '',
+        email: `phone-${phone.replace(/\D/g, '')}@campuscoin.app`,
+        authPhone: phone,
+        phone,
+        emailVerified: true,
+        profileComplete: false,
+        currency: 'PKR',
+        avatarColor: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+      });
+    }
+    if (user.disabled) return res.status(403).json({ message: 'This account has been disabled.' });
+    user.lastLoginAt = new Date();
+    await user.save();
+    res.json({ token: signToken(user), user: publicUser(user), isNew });
+  })
+);
 
 export { publicUser };
 export default router;

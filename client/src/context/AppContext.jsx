@@ -238,6 +238,26 @@ export function AuthProvider({ children }) {
         greetNext({ kind: 'back' });
         return data.user;
       },
+      // Texts a login code to the number. Returns { sent, devCode? }.
+      async startPhone(phone) {
+        return api.post('/auth/phone/start', { phone });
+      },
+      // Exchanges the code for a session. A brand-new number gets an account and
+      // the tour, same as a new email sign-up.
+      async loginWithPhone(phone, code) {
+        const data = await api.post('/auth/phone/verify', { phone, code });
+        setToken(data.token);
+        adopt(data.user);
+        greetNext({ kind: data.isNew ? 'new' : 'back' });
+        if (data.isNew) {
+          try {
+            localStorage.setItem('campuscoin.tour', '1');
+          } catch {
+            /* private mode - the tour just never shows, not worth breaking on */
+          }
+        }
+        return { user: data.user, isNew: data.isNew };
+      },
       async updateProfile(payload) {
         const data = await api.patch('/auth/me', payload);
         setUser(data.user);

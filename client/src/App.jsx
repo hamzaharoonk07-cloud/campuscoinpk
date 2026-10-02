@@ -7,6 +7,8 @@ import Register from './pages/Register.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Privacy from './pages/Privacy.jsx';
+import Welcome from './pages/Welcome.jsx';
+import Phone from './pages/Phone.jsx';
 
 import Dashboard from './pages/Dashboard.jsx';
 import Transactions from './pages/Transactions.jsx';
@@ -36,7 +38,7 @@ function Protected({ children, admin = false }) {
   const location = useLocation();
 
   if (loading) return <Loading />;
-  if (!user) return <Navigate to={admin ? '/admin/login' : '/login'} state={{ from: location.pathname }} replace />;
+  if (!user) return <Navigate to={admin ? '/admin/login' : '/welcome'} state={{ from: location.pathname }} replace />;
   if (admin && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   // An administrator has no student dashboard, so send them where they belong.
   if (!admin && user.role === 'admin') return <Navigate to="/admin" replace />;
@@ -66,6 +68,8 @@ export default function App() {
       <Route path="/forgot-password" element={<PublicOnly><ForgotPassword /></PublicOnly>} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/privacy" element={<Privacy />} />
+      <Route path="/welcome" element={<PublicOnly><Welcome /></PublicOnly>} />
+      <Route path="/phone" element={<PublicOnly><Phone /></PublicOnly>} />
       <Route path="/admin/login" element={<PublicOnly><AdminLogin /></PublicOnly>} />
 
       <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />

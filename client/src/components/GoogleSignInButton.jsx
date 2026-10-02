@@ -29,7 +29,7 @@ function loadGoogleScript() {
   return scriptPromise;
 }
 
-export default function GoogleSignInButton() {
+export default function GoogleSignInButton({ bare = false }) {
   const { loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -77,9 +77,11 @@ export default function GoogleSignInButton() {
   if (!clientId) return null;
   return (
     <>
-      <div className="auth-or">
-        <span>or</span>
-      </div>
+      {bare ? null : (
+        <div className="auth-or">
+          <span>or</span>
+        </div>
+      )}
       <div className="google-signin-card">
         <div className="google-signin" ref={ref} />
       </div>

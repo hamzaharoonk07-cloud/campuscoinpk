@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema(
     // no phone number of its own) - the app gates on this being empty rather
     // than trusting signup alone, since old accounts predate the field.
     phone: { type: String, trim: true, maxlength: 20, default: '' },
+    // The verified phone number for phone-OTP accounts, in +E.164 form. Sparse +
+    // unique so it is the login handle for these accounts while email/Google
+    // accounts (which never set it) are untouched. Distinct from `phone` above,
+    // which is an unverified profile field any account may carry.
+    authPhone: { type: String, trim: true, maxlength: 24, index: true, sparse: true, unique: true },
     // An optional profile photo as a small data URL (see utils/images.js).
     // The coloured initial is shown whenever this is empty.
     avatar: { type: String, default: '' },
