@@ -88,6 +88,10 @@ function GreetingCard({ user, line, balance, currency, pace, onAdd }) {
           </button>
         </div>
       </div>
+      <div className="d9-greet-art" aria-hidden="true">
+        <span className="d9-greet-glow" />
+        <img src={artUrl('money-bag')} alt="" />
+      </div>
     </section>
   );
 }

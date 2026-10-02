@@ -46,11 +46,6 @@ const STEPS = [
     body: 'Track loans between friends separately from your own spending, and send a reminder - with a branded card ready to share - in one tap.',
   },
   {
-    art: 'dollar-banknote',
-    title: 'Run a committee',
-    body: 'Put a group kameti on Campus Coin - it tracks whose turn it is to be paid and who still needs to put their share in.',
-  },
-  {
     art: 'bar-chart',
     title: 'Insights, from your own numbers',
     body: 'Reports and Insights turn what you log into real patterns - where it goes, which days cost the most - not generic advice.',

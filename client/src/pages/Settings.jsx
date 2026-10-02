@@ -477,7 +477,7 @@ export default function Settings() {
         <div className="panel-body security-row">
           <span>
             <strong>Core features</strong>
-            <small>Phrase entry, automatic SMS logging, budgets, udhaar, committees and insights - a quick tour of each.</small>
+            <small>Phrase entry, automatic SMS logging, budgets, udhaar and insights - a quick tour of each.</small>
           </span>
           <button type="button" className="btn btn-sm" onClick={startFeatureTour}>
             <Icon name="spark" size={14} />

@@ -217,7 +217,6 @@ export default function AdminStudents() {
               <span className="pill is-bad">Out: {money(detail.totals.expense, detail.user.currency)}</span>
               <span className="pill">{detail.budgets.length} budgets</span>
               <span className="pill">{detail.udhaarOpen} open udhaar</span>
-              <span className="pill">{detail.committees} committees</span>
               <span className="pill">{detail.ownCategoryCount} own categories</span>
             </div>
 

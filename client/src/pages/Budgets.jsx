@@ -21,38 +21,184 @@ function budgetNote(budget, currency) {
   return `${money(budget.remaining, currency)} left - almost there, ease off a bit`;
 }
 
+/**
+ * Set several category caps in one go. Every uncapped category that has real
+ * spending history is listed with an amount already filled in from what the
+ * student usually spends there (GET /budgets/suggestions), so this starts
+ * from real numbers, not blank fields. Clearing a row's amount skips it.
+ */
+function MultiSetForm({ month, suggestions, onSaved }) {
+  const toast = useToast();
+  const [amounts, setAmounts] = useState({});
+  const [busy, setBusy] = useState(false);
+
+  // Seed each row with its suggested amount whenever the suggestions change.
+  useEffect(() => {
+    const seed = {};
+    for (const s of suggestions) seed[s.categoryId] = String(s.suggested);
+    setAmounts(seed);
+  }, [suggestions]);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const budgets = Object.entries(amounts)
+      .map(([categoryId, v]) => ({ categoryId, limitAmount: Number(v) }))
+      .filter((b) => Number.isFinite(b.limitAmount) && b.limitAmount > 0);
+    if (!budgets.length) {
+      toast.error('Nothing to save', 'Enter an amount for at least one category.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const { saved } = await api.put('/budgets/bulk', { month, budgets });
+      toast.success(`${saved} budget${saved === 1 ? '' : 's'} set`);
+      onSaved();
+    } catch (err) {
+      toast.error('Could not save those', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!suggestions.length) return null;
+
+  return (
+    <form className="stack" onSubmit={submit}>
+      <p className="small muted" style={{ margin: 0 }}>
+        Amounts are filled in from what you usually spend - change any, clear one to skip it.
+      </p>
+      <div className="budget-multi">
+        {suggestions.map((s) => (
+          <div className="budget-multi-row" key={s.categoryId}>
+            <span className="budget-multi-name">
+              <i className="swatch" style={{ background: slotColor(s.slot) }} />
+              {s.name}
+            </span>
+            <input
+              type="number"
+              min="0"
+              inputMode="numeric"
+              value={amounts[s.categoryId] ?? ''}
+              onChange={(e) => setAmounts({ ...amounts, [s.categoryId]: e.target.value })}
+              aria-label={`${s.name} cap`}
+            />
+          </div>
+        ))}
+      </div>
+      <button type="submit" className="btn btn-primary" disabled={busy}>
+        {busy ? 'Saving…' : 'Set these caps'}
+      </button>
+    </form>
+  );
+}
+
+/** The one overall monthly cap, across everything - set, change or clear it. */
+function OverallBudgetCard({ month, overall, onSaved, currency }) {
+  const toast = useToast();
+  const [value, setValue] = useState(overall ? String(overall.limitAmount) : '');
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    setValue(overall ? String(overall.limitAmount) : '');
+    setEditing(false);
+  }, [overall]);
+
+  const save = async (event) => {
+    event.preventDefault();
+    try {
+      await api.put('/budgets/overall', { month, limitAmount: Number(value) || 0 });
+      toast.success(Number(value) > 0 ? 'Overall budget set' : 'Overall budget cleared');
+      onSaved();
+    } catch (err) {
+      toast.error('Could not save that', err.message);
+    }
+  };
+
+  if (overall && !editing) {
+    const tone = overall.state === 'exceeded' ? 'bad' : overall.state === 'warning' ? 'warn' : 'good';
+    return (
+      <section className="panel">
+        <div className="panel-head">
+          <h3>Overall budget</h3>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>
+            Change
+          </button>
+        </div>
+        <div className="panel-body">
+          <div className="spine-amount num" style={{ marginBottom: '0.5rem' }}>
+            {money(overall.spent, currency)} <span className="muted small">of {money(overall.limitAmount, currency)}</span>
+            <span className={`pill is-${tone}`} style={{ marginLeft: '0.5rem' }}>
+              {overall.state === 'exceeded' ? 'Over' : overall.state === 'warning' ? 'Close' : 'On track'}
+            </span>
+          </div>
+          <div className="spine-bar">
+            <div
+              className="spine-fill"
+              style={{
+                width: `${Math.min(100, overall.pct)}%`,
+                background: tone === 'bad' ? 'var(--bad)' : tone === 'warn' ? 'var(--warn)' : 'var(--accent)',
+              }}
+            />
+          </div>
+          <p className="small muted" style={{ marginTop: '0.4rem' }}>
+            {overall.remaining >= 0
+              ? `${money(overall.remaining, currency)} left across everything this month`
+              : `${money(Math.abs(overall.remaining), currency)} over your total for the month`}
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <h3>Overall budget</h3>
+      </div>
+      <div className="panel-body">
+        <form className="stack" onSubmit={save}>
+          <p className="small muted" style={{ margin: 0 }}>
+            One cap for everything this month, on top of the per-category ones.
+          </p>
+          <div className="field">
+            <label htmlFor="overall">Total monthly cap</label>
+            <input id="overall" type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} placeholder="e.g. 30000" />
+          </div>
+          <div className="row">
+            <button type="submit" className="btn btn-primary">
+              {overall ? 'Update' : 'Set it'}
+            </button>
+            {overall ? (
+              <button type="button" className="btn btn-ghost" onClick={() => setEditing(false)}>
+                Cancel
+              </button>
+            ) : null}
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+}
+
 export default function Budgets() {
   const { currency } = useAuth();
   const toast = useToast();
   const [month, setMonth] = useState(monthKey());
   const [data, setData] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [draft, setDraft] = useState({ categoryId: '', limitAmount: '' });
+  const [suggestions, setSuggestions] = useState([]);
 
   const load = useCallback(() => {
     api
       .get(`/budgets?month=${month}`)
       .then(setData)
       .catch((err) => toast.error('Could not load your budgets', err.message));
+    api
+      .get(`/budgets/suggestions?month=${month}`)
+      .then(({ suggestions: list }) => setSuggestions(list))
+      .catch(() => setSuggestions([]));
   }, [month, toast]);
 
   useEffect(load, [load]);
-
-  useEffect(() => {
-    api.get('/categories?type=expense').then(({ categories: list }) => setCategories(list)).catch(() => {});
-  }, []);
-
-  const save = async (event) => {
-    event.preventDefault();
-    try {
-      await api.put('/budgets', { ...draft, month, limitAmount: Number(draft.limitAmount) });
-      setDraft({ categoryId: '', limitAmount: '' });
-      load();
-      toast.success('Budget saved');
-    } catch (err) {
-      toast.error('Could not save that budget', err.message);
-    }
-  };
 
   const remove = async (budget) => {
     try {
@@ -73,9 +219,6 @@ export default function Budgets() {
       toast.error('Nothing to copy', err.message);
     }
   };
-
-  const used = new Set((data?.budgets || []).map((b) => String(b.category._id)));
-  const available = categories.filter((c) => !used.has(String(c._id)));
 
   return (
     <Layout
@@ -140,10 +283,7 @@ export default function Budgets() {
               <div className="empty">
                 <GaugeArt />
                 <h3>No caps set for this month</h3>
-                <p>
-                  Start with one. A single cap on the category you spend most on is the change students actually keep
-                  to - five caps at once almost never survive the month.
-                </p>
+                <p>Set caps on the right - amounts are filled in from what you usually spend, so you can set them all in one go.</p>
               </div>
             ) : (
               <div className="spine">
@@ -163,73 +303,30 @@ export default function Budgets() {
           </div>
         </section>
 
-        <section className="panel">
-          <div className="panel-head">
-            <h3>Add a cap</h3>
-          </div>
-          <div className="panel-body">
-            <GaugeArt label="A budget gauge filling up" />
-            {available.length === 0 ? (
-              <p className="muted small">Every expense category already has a cap this month.</p>
-            ) : (
-              <form className="stack" onSubmit={save}>
-                <div className="field">
-                  <label htmlFor="cat">Category</label>
-                  <select
-                    id="cat"
-                    required
-                    value={draft.categoryId}
-                    onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}
-                  >
-                    <option value="">Choose one</option>
-                    {available.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        <div className="stack">
+          <OverallBudgetCard month={month} overall={data?.overall || null} onSaved={load} currency={currency} />
 
-                <div className="field">
-                  <label htmlFor="limit">Monthly cap</label>
-                  <input
-                    id="limit"
-                    type="number"
-                    min="0"
-                    required
-                    value={draft.limitAmount}
-                    onChange={(e) => setDraft({ ...draft, limitAmount: e.target.value })}
-                  />
-                </div>
-
-                <button type="submit" className="btn btn-primary">
-                  Set the cap
-                </button>
-
-                <p className="small muted">
-                  Campus Coin will tell you once when you pass 80% of it, and once if you go over. It will not nag on
-                  every purchase after that.
+          <section className="panel">
+            <div className="panel-head">
+              <h3>Set category caps</h3>
+            </div>
+            <div className="panel-body">
+              {suggestions.length ? (
+                <MultiSetForm month={month} suggestions={suggestions} onSaved={load} />
+              ) : (
+                <p className="muted small">
+                  {data?.budgets.length
+                    ? 'Every category with spending history already has a cap this month.'
+                    : 'Log a few transactions first - then Campus Coin can suggest caps from what you actually spend.'}
                 </p>
-              </form>
-            )}
-
-            {categories.length ? (
-              <div style={{ marginTop: '1.5rem' }}>
-                <h4 className="small muted" style={{ marginBottom: '0.6rem', fontWeight: 600 }}>
-                  Categories without a cap
-                </h4>
-                <div className="row row-wrap">
-                  {available.slice(0, 8).map((c) => (
-                    <span className="pill" key={c._id}>
-                      <i className="swatch" style={{ background: slotColor(c.slot) }} />
-                      {c.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </section>
+              )}
+              <p className="small muted" style={{ marginTop: '1rem' }}>
+                Campus Coin tells you once when you pass 80% of a cap, and once if you go over - it will not nag on every
+                purchase.
+              </p>
+            </div>
+          </section>
+        </div>
       </div>
     </Layout>
   );

@@ -10,7 +10,6 @@ import Insight from '../models/Insight.js';
 import Tip from '../models/Tip.js';
 import CategoryHint from '../models/CategoryHint.js';
 import Udhaar from '../models/Udhaar.js';
-import Committee from '../models/Committee.js';
 import { protect, allow, wrap } from '../middleware/auth.js';
 import { startOfMonth, addMonths } from '../utils/dates.js';
 import { round2 } from '../utils/money.js';
@@ -121,12 +120,11 @@ router.get(
     if (!user) return res.status(404).json({ message: 'That student was not found' });
     const id = user._id;
 
-    const [recentTransactions, totals, budgets, udhaar, committees, categoryCount] = await Promise.all([
+    const [recentTransactions, totals, budgets, udhaar, categoryCount] = await Promise.all([
       Transaction.find({ user: id }).sort({ date: -1 }).limit(25).populate('category', 'name icon slot type'),
       Transaction.aggregate([{ $match: { user: id } }, { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }]),
       Budget.find({ user: id }).populate('category', 'name icon'),
       Udhaar.find({ user: id, settled: false }),
-      Committee.find({ user: id, archived: false }),
       Category.countDocuments({ owner: id }),
     ]);
 
@@ -151,7 +149,6 @@ router.get(
       udhaarOpen: udhaar.length,
       udhaarOwedToThem: round2(udhaar.filter((u) => u.direction === 'owed_to_me').reduce((s, u) => s + u.amount, 0)),
       udhaarTheyOwe: round2(udhaar.filter((u) => u.direction === 'i_owe').reduce((s, u) => s + u.amount, 0)),
-      committees: committees.length,
       ownCategoryCount: categoryCount,
     });
   })

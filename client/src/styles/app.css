@@ -621,6 +621,12 @@ a:hover { text-decoration-color: currentColor; }
 
 /* The cash / card footnote under a budget bar - quiet, so it reads as a
    detail on the total above rather than competing with it. */
+/* The "set several caps at once" rows: a name and a number input per line. */
+.budget-multi { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.25rem 0 0.25rem; }
+.budget-multi-row { display: flex; align-items: center; gap: 0.6rem; }
+.budget-multi-name { flex: 1; display: inline-flex; align-items: center; gap: 0.45rem; font-size: var(--step--1); }
+.budget-multi-row input { width: 7.5rem; flex: none; }
+
 .spine-split {
   grid-column: 1 / -1;
   display: flex;
