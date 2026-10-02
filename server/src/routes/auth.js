@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import express from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import { protect, signToken, wrap } from '../middleware/auth.js';
 import { sendMail, mailConfigured, screenResetLinkAllowed } from '../services/mailer.js';
@@ -134,6 +135,58 @@ router.post(
     }).catch(() => {});
 
     res.status(201).json({ token: signToken(user), user: publicUser(user) });
+  })
+);
+
+/**
+ * "Sign in with Google" - verifies the ID token Google Identity Services
+ * handed the client, then signs in an existing account or creates a new
+ * one. Verification (signature, issuer, audience, expiry) is done by
+ * google-auth-library against Google's own current public keys, never by
+ * trusting anything the client sent about who the user is.
+ */
+const googleClient = process.env.GOOGLE_CLIENT_ID ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID) : null;
+
+router.post(
+  '/google',
+  wrap(async (req, res) => {
+    if (!googleClient) return res.status(503).json({ message: 'Google sign-in is not configured on this server' });
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ message: 'No Google credential was sent' });
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
+      payload = ticket.getPayload();
+    } catch {
+      return res.status(401).json({ message: 'That Google sign-in could not be verified' });
+    }
+    if (!payload?.email_verified) return res.status(401).json({ message: 'That Google account has no verified email' });
+
+    let user = await User.findOne({ googleId: payload.sub });
+    if (!user) {
+      // An account already exists under this email from a normal
+      // registration - link Google to it rather than making a second
+      // account for the same person, by the same email.
+      user = await User.findOne({ email: payload.email.toLowerCase() });
+      if (user) {
+        user.googleId = payload.sub;
+      } else {
+        user = new User({
+          name: payload.name || payload.email.split('@')[0],
+          email: payload.email,
+          googleId: payload.sub,
+          avatarColor: PALETTE[Math.floor(Math.random() * PALETTE.length)],
+          role: 'student',
+        });
+      }
+      await user.save();
+    }
+    if (user.disabled) return res.status(403).json({ message: 'This account has been disabled' });
+
+    user.lastLoginAt = new Date();
+    await user.save();
+    res.json({ token: signToken(user), user: publicUser(user) });
   })
 );
 
@@ -379,6 +432,10 @@ router.post(
 );
 
 router.get('/mail-status', (req, res) => res.json({ configured: mailConfigured() }));
+
+/** Whether Google sign-in is set up, and the client ID to render the button
+ *  with - public by design, the same way any OAuth client ID is. */
+router.get('/google-status', (req, res) => res.json({ configured: Boolean(googleClient), clientId: process.env.GOOGLE_CLIENT_ID || null }));
 
 export { publicUser };
 export default router;

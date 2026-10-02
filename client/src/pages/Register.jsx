@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthAside, AuthTop, IconField } from './Login.jsx';
 import { BrandMark } from '../components/Icon.jsx';
+import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { CURRENCY_SYMBOLS } from '../lib/format.js';
 import { StudyOptions } from '../lib/study.jsx';
@@ -171,6 +172,8 @@ export default function Register() {
             Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </form>
+
+        <GoogleSignInButton />
         </div>
       </div>
     </div>

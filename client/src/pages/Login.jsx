@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon, { Wordmark } from '../components/Icon.jsx';
+import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import { useAuth } from '../context/AppContext.jsx';
 import { markFor } from '../lib/methods.js';
 
@@ -280,6 +281,8 @@ export default function Login() {
             Use the demo account
           </button>
         </form>
+
+        <GoogleSignInButton />
 
         {/* Fills what was empty dark ground above and below a card this short. */}
         <AuthFeed />

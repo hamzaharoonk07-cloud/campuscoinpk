@@ -1562,6 +1562,16 @@ table.data tbody tr:last-child td { border-bottom: 0; }
 .auth-alt a { color: var(--accent-text); font-weight: 600; text-decoration: none; }
 .auth-alt a:hover { text-decoration: underline; }
 
+/* The divider between the normal form and "Sign in with Google" - a line
+   through the word, not a full rule, so it reads as "or" rather than as a
+   section break. Hidden entirely (google-signin stays empty) when the
+   server has no client ID configured, so there is never a lone divider
+   sitting above nothing. */
+.auth-or { display: flex; align-items: center; gap: 0.75rem; margin: 0.4rem 0; color: var(--muted); font-size: var(--step--1); }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
+.google-signin { display: flex; justify-content: center; }
+.google-signin:empty { display: none; }
+
 .auth-fine {
   margin: 0;
   color: var(--on-navy-muted);

@@ -13,8 +13,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Enter a valid email address'],
     },
-    passwordHash: { type: String, required: true, select: false },
+    // Not required: a Google account has nothing to hash here until (if
+    // ever) the student sets a password of their own - checkPassword simply
+    // fails closed for an account that doesn't have one yet.
+    passwordHash: { type: String, select: false },
     role: { type: String, enum: ['student', 'admin'], default: 'student', index: true },
+
+    // Set only for an account created or linked through "Sign in with
+    // Google" - Google's own stable per-account identifier, separate from
+    // email (which a student could change on Google's side).
+    googleId: { type: String, index: true, sparse: true, unique: true },
 
     // Profile fields from the SRS (section 1.6, "User Authentication and Management")
     // School, college, university or postgraduate year (utils/study.js).
@@ -80,6 +88,10 @@ userSchema.methods.setPassword = async function setPassword(plain) {
 };
 
 userSchema.methods.checkPassword = function checkPassword(plain) {
+  // A Google-only account has no passwordHash yet - fail closed rather than
+  // let bcrypt.compare throw on undefined, which would otherwise read as a
+  // 500 instead of the plain "wrong password" the login route expects.
+  if (!this.passwordHash) return Promise.resolve(false);
   return bcrypt.compare(plain, this.passwordHash);
 };
 

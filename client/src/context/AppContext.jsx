@@ -201,6 +201,13 @@ export function AuthProvider({ children }) {
         greetNext({ kind: 'new' });
         return data.user;
       },
+      async loginWithGoogle(credential) {
+        const data = await api.post('/auth/google', { credential });
+        setToken(data.token);
+        adopt(data.user);
+        greetNext({ kind: 'back' });
+        return data.user;
+      },
       async updateProfile(payload) {
         const data = await api.patch('/auth/me', payload);
         setUser(data.user);
