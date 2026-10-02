@@ -283,9 +283,15 @@ router.post(
   wrap(async (req, res) => {
     const user = await checkSignIn(req, res);
     if (!user) return;
-    // The password was already right - two-step verification is a second,
-    // separate proof (the inbox), not a replacement for it.
-    if (user.twoFactorEnabled) {
+    // The password was already right - the emailed code is a second, separate
+    // proof (the inbox), and it is now required of every sign-in, not opt-in.
+    // The one exception is an address that cannot actually receive it: the
+    // shared demo/seed accounts live on the made-up @campuscoin.app domain,
+    // and a mail outage must not lock everyone out - in both cases we fall
+    // back to signing in on the password alone rather than stranding them on
+    // a code screen no code will ever reach.
+    const canReceiveCode = mailConfigured() && !/@campuscoin\.app$/i.test(user.email);
+    if (canReceiveCode) {
       await sendTwoFactorCode(user, { verb: 'finish signing in' });
       return res.json({ twoFactorRequired: true, userId: user._id });
     }
