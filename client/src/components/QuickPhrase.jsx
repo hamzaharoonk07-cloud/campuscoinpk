@@ -33,6 +33,7 @@ export default function QuickPhrase({ categories = [], onSaved }) {
   const [listening, setListening] = useState(false);
   const [draft, setDraft] = useState(null); // set only when it needs a confirm
   const [hint, setHint] = useState(EXAMPLES[0]);
+  const [mode, setMode] = useState('phrase'); // 'phrase' | 'sms'
   const recognitionRef = useRef(null);
 
   // Rotate the example in the placeholder so students see what they can say.
@@ -58,7 +59,9 @@ export default function QuickPhrase({ categories = [], onSaved }) {
         amount: d.amount,
         description: d.description,
         aiSuggestedCategory: d.category?._id || null,
-        source: 'phrase',
+        // An SMS carries the wallet it moved through; a phrase does not.
+        method: d.method || undefined,
+        source: d.source || 'phrase',
       });
       setDraft(null);
       setPhrase('');
@@ -95,8 +98,8 @@ export default function QuickPhrase({ categories = [], onSaved }) {
       const { draft: d } = await api.post('/transactions/parse', { phrase: value });
       // Amount and a confident category → save at once. Otherwise let the
       // student finish it off.
-      if (d.amount && d.category) await saveDraft(d);
-      else setDraft(d);
+      if (d.amount && d.category) await saveDraft({ ...d, source: 'phrase' });
+      else setDraft({ ...d, source: 'phrase' });
     } catch (err) {
       // The server sends the draft back even when it could not find an amount,
       // so the box keeps the words and tells the student what is missing.
@@ -104,6 +107,31 @@ export default function QuickPhrase({ categories = [], onSaved }) {
     } finally {
       setBusy(false);
     }
+  };
+
+  // Reads a pasted bank / wallet SMS. The merchant drives the category and the
+  // wallet is recorded, so a confident read saves straight away like a phrase.
+  const parseSmsText = async () => {
+    const value = phrase.trim();
+    if (!value || busy) return;
+    setBusy(true);
+    try {
+      const { draft: d } = await api.post('/transactions/parse-sms', { text: value });
+      if (d.amount && d.category) await saveDraft({ ...d, source: 'sms' });
+      else setDraft({ ...d, source: 'sms' });
+    } catch (err) {
+      toast.error("Couldn't read that SMS", err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = () => (mode === 'sms' ? parseSmsText() : parse());
+
+  const switchMode = (next) => {
+    setMode(next);
+    setPhrase('');
+    setDraft(null);
   };
 
   const listen = () => {
@@ -136,30 +164,57 @@ export default function QuickPhrase({ categories = [], onSaved }) {
 
   return (
     <section className="qp" aria-label="Quick add by phrase">
-      <div className="qp-bar">
-        <Icon name="spark" size={18} />
-        <input
-          className="qp-input"
-          value={phrase}
-          onChange={(e) => setPhrase(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && parse()}
-          placeholder={`Try "${hint}"`}
-          aria-label="Say what you spent on"
-          disabled={busy && !draft}
-        />
-        {SpeechRecognition ? (
-          <button
-            type="button"
-            className={`qp-mic ${listening ? 'is-live' : ''}`}
-            onClick={listen}
-            aria-label={listening ? 'Stop listening' : 'Speak your expense'}
-            title={listening ? 'Listening…' : 'Speak'}
-          >
-            <Icon name="mic" size={18} />
+      {mode === 'sms' ? (
+        <div className="qp-bar is-sms">
+          <Icon name="chat" size={18} />
+          <textarea
+            className="qp-input qp-area"
+            value={phrase}
+            onChange={(e) => setPhrase(e.target.value)}
+            placeholder="Paste a bank or wallet SMS — e.g. “Rs 1,500 spent on your HBL Debit Card at FOODPANDA…”"
+            aria-label="Paste a bank SMS"
+            rows={2}
+            disabled={busy && !draft}
+          />
+          <button type="button" className="qp-go" onClick={parseSmsText} disabled={busy || !phrase.trim()}>
+            {busy ? '…' : 'Read'}
           </button>
-        ) : null}
-        <button type="button" className="qp-go" onClick={() => parse()} disabled={busy || !phrase.trim()}>
-          {busy ? '…' : 'Add'}
+        </div>
+      ) : (
+        <div className="qp-bar">
+          <Icon name="spark" size={18} />
+          <input
+            className="qp-input"
+            value={phrase}
+            onChange={(e) => setPhrase(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && parse()}
+            placeholder={`Try "${hint}"`}
+            aria-label="Say what you spent on"
+            disabled={busy && !draft}
+          />
+          {SpeechRecognition ? (
+            <button
+              type="button"
+              className={`qp-mic ${listening ? 'is-live' : ''}`}
+              onClick={listen}
+              aria-label={listening ? 'Stop listening' : 'Speak your expense'}
+              title={listening ? 'Listening…' : 'Speak'}
+            >
+              <Icon name="mic" size={18} />
+            </button>
+          ) : null}
+          <button type="button" className="qp-go" onClick={() => parse()} disabled={busy || !phrase.trim()}>
+            {busy ? '…' : 'Add'}
+          </button>
+        </div>
+      )}
+
+      <div className="qp-modes">
+        <button type="button" className={mode === 'phrase' ? 'is-on' : ''} onClick={() => switchMode('phrase')}>
+          Say it
+        </button>
+        <button type="button" className={mode === 'sms' ? 'is-on' : ''} onClick={() => switchMode('sms')}>
+          Paste bank SMS
         </button>
       </div>
 

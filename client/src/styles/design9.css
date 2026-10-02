@@ -1548,3 +1548,34 @@ button.d9-acc-toggle.is-open .d9-acc-hint::after { content: ' \2039'; }
   border-radius: 999px;
 }
 .qp-draft-x:hover { color: var(--text); }
+
+/* SMS paste mode: a taller box that holds a whole alert, plus the little
+   two-way toggle between saying it and pasting a bank SMS. */
+.qp-bar.is-sms { align-items: flex-start; border-radius: var(--r-control); padding: 0.6rem 0.6rem 0.6rem 0.85rem; }
+.qp-bar.is-sms > svg { margin-top: 0.35rem; }
+.qp-area {
+  resize: none;
+  line-height: 1.4;
+  padding: 0.25rem 0;
+  font-family: inherit;
+}
+.qp-bar.is-sms .qp-go { align-self: stretch; }
+
+.qp-modes {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding-left: 0.3rem;
+}
+.qp-modes button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+.qp-modes button.is-on { background: var(--accent-soft); color: var(--text); }
+.qp-modes button:hover { color: var(--text); }

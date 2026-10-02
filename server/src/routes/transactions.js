@@ -4,6 +4,7 @@ import Transaction, { PAYMENT_METHODS } from '../models/Transaction.js';
 import { protect, wrap } from '../middleware/auth.js';
 import { learn, suggestBatch } from '../services/categorizer.js';
 import { parsePhrase } from '../services/phraseParser.js';
+import { parseSms } from '../services/smsParser.js';
 import { detectFlags, describeFlag } from '../services/anomaly.js';
 import { checkBudgets, notifyAnomaly } from '../services/alerts.js';
 import { parseTransactionCsv, toCsv } from '../services/csv.js';
@@ -113,6 +114,24 @@ router.post(
     const draft = await parsePhrase({ userId: req.user._id, phrase });
     if (draft.amount === null) {
       return res.status(422).json({ message: "I couldn't find an amount - try \"chai 150\"", draft });
+    }
+    res.json({ draft });
+  })
+);
+
+/**
+ * Reads a pasted bank or wallet SMS into a draft transaction - amount, money
+ * in/out, merchant, the wallet it moved through, and a suggested category -
+ * without saving. The student confirms, then the normal POST writes it.
+ */
+router.post(
+  '/parse-sms',
+  wrap(async (req, res) => {
+    const text = String(req.body.text || '').trim();
+    if (!text) return res.status(400).json({ message: 'Paste a bank SMS to read' });
+    const draft = await parseSms({ userId: req.user._id, text });
+    if (draft.amount === null) {
+      return res.status(422).json({ message: "I couldn't find an amount in that message", draft });
     }
     res.json({ draft });
   })
