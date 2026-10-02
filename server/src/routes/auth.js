@@ -645,7 +645,6 @@ router.post(
       await otp.save();
       return res.status(401).json({ message: 'That code is not right' });
     }
-    await otp.deleteOne();
 
     let user = await User.findOne({ authPhone: phone });
     let isNew = false;
@@ -653,9 +652,10 @@ router.post(
       isNew = true;
       // A placeholder @campuscoin.app address satisfies the required+unique email
       // without ever being mailed (that domain is skipped by the mailer path). The
-      // student sets a real name next through RequireProfile (profileComplete:false).
+      // name is a placeholder until the student sets a real one through
+      // RequireProfile, which profileComplete:false sends them to next.
       user = await User.create({
-        name: '',
+        name: 'Student',
         email: `phone-${phone.replace(/\D/g, '')}@campuscoin.app`,
         authPhone: phone,
         phone,
@@ -666,6 +666,9 @@ router.post(
       });
     }
     if (user.disabled) return res.status(403).json({ message: 'This account has been disabled.' });
+    // Only now that the account exists is the code spent, so a failed create
+    // leaves the code usable for a retry.
+    await otp.deleteOne();
     user.lastLoginAt = new Date();
     await user.save();
     res.json({ token: signToken(user), user: publicUser(user), isNew });
