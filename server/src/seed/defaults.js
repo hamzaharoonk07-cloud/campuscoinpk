@@ -21,5 +21,10 @@ export const DEFAULT_CATEGORIES = [
   { name: 'Academics', type: 'expense', icon: 'book', slot: 4, keywords: ['book', 'books', 'stationery', 'notebook', 'printing', 'photocopy', 'lab', 'semester', 'fee', 'course', 'exam', 'library', 'pen'] },
   { name: 'Subscriptions', type: 'expense', icon: 'repeat', slot: 6, keywords: ['netflix', 'spotify', 'youtube', 'subscription', 'premium', 'plan', 'package', 'cloud', 'chatgpt', 'canva', 'gym', 'membership'] },
   { name: 'Entertainment', type: 'expense', icon: 'film', slot: 5, keywords: ['movie', 'cinema', 'game', 'gaming', 'concert', 'outing', 'trip', 'hangout', 'party', 'match', 'ticket'] },
-  { name: 'Miscellaneous', type: 'expense', icon: 'tag', slot: 7, keywords: ['misc', 'other', 'random', 'gift', 'charity', 'haircut', 'medicine', 'clothes', 'laundry'] },
+  // 'zakat'/'sadqa' and their spellings land here rather than a 13th default
+  // category - the SRS deliberately fixes the twelve defaults (see the report's
+  // Test data section), so a new category for this is a dedicated page's job,
+  // not the seed's; the keywords are what let the categoriser still place it
+  // correctly when logged as a normal transaction.
+  { name: 'Miscellaneous', type: 'expense', icon: 'tag', slot: 7, keywords: ['misc', 'other', 'random', 'gift', 'charity', 'haircut', 'medicine', 'clothes', 'laundry', 'zakat', 'sadqa', 'sadaqah', 'sadaqa', 'khairat', 'fitrana', 'donation'] },
 ];

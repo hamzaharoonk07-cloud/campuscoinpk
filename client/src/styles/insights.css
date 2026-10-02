@@ -238,6 +238,10 @@
 .in-empty { align-items: center; text-align: center; gap: 0.5rem; padding: 2rem; }
 .in-empty .in-pill { align-self: center; margin-top: 0.5rem; }
 
+.in-zakat input { width: 100%; }
+.in-zakat-due { margin: 0.6rem 0 0; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.in-zakat-due span { font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-left: 0.3rem; }
+
 @media (prefers-reduced-motion: reduce) {
   .in-card,
   .in-story,
