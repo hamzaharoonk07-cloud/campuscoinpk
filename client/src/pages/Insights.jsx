@@ -166,7 +166,7 @@ export default function Insights() {
           <div className="in-story-head">
             <span className="in-badge">
               <Icon name="spark" size={13} />
-              {insight.engine === 'llm' ? 'Written by Claude from your figures' : "Coin's read on your month"}
+              {insight.engine === 'llm' ? 'Written from your own figures' : "Coin's read on your month"}
             </span>
             <span className="in-story-actions">
               <button type="button" onClick={bookmark} aria-pressed={insight.bookmarked}>
@@ -463,8 +463,8 @@ export default function Insights() {
               </form>
               {!aiEnabled ? (
                 <p className="in-note">
-                  Written by Campus Coin&rsquo;s own statistical engine. With an <code>ANTHROPIC_API_KEY</code> on the
-                  server, Claude rewrites the same figures in warmer words.
+                  Written by Campus Coin&rsquo;s own statistical engine. With a language-model key on the server, the
+                  same figures can be rewritten in warmer words.
                 </p>
               ) : null}
             </section>

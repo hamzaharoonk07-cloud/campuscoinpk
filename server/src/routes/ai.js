@@ -64,7 +64,7 @@ router.get(
       narrativeInsights: {
         enabled: llmEnabled(),
         note: llmEnabled()
-          ? 'Monthly summaries are rewritten by Claude from figures Campus Coin calculates itself.'
+          ? 'Monthly summaries are rewritten by a language model from figures Campus Coin calculates itself.'
           : 'No API key is set, so monthly summaries are written by the built-in statistical engine.',
       },
     });

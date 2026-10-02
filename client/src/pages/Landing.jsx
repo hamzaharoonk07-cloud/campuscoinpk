@@ -953,8 +953,8 @@ export default function Landing() {
             </nav>
           </div>
           <p className="lp-colophon">
-            Campus Coin is a student project for the Aptech End-to-End Web Solutions category. It holds no real money,
-            connects to no bank, and its suggestions are prompts to look closer, not financial advice.
+            Campus Coin is a budgeting app made for students. It holds no real money, connects to no bank, and its
+            suggestions are prompts to look closer, not financial advice.
           </p>
         </div>
       </footer>

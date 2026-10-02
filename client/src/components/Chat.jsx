@@ -65,7 +65,7 @@ function Answer({ message }) {
           <Icon name="right" size={14} />
         </Link>
       ) : null}
-      {message.source === 'claude' ? <span className="chat-source">Worded by Claude from your figures</span> : null}
+      {message.source === 'claude' ? <span className="chat-source">Worded from your own figures</span> : null}
     </>
   );
 }
