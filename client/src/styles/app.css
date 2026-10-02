@@ -1134,6 +1134,10 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   position: fixed;
   inset: 0;
   z-index: 50;
+  /* Height from dvh so the modal centres within the visible area, not behind
+     the mobile address bar (see .modal). */
+  height: 100vh;
+  height: 100dvh;
   background: rgba(6, 9, 13, 0.62);
   backdrop-filter: blur(4px);
   display: grid;
@@ -1148,7 +1152,12 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   border-radius: var(--r-panel-lg);
   box-shadow: var(--shadow-3), var(--edge-strong);
   width: min(560px, 100%);
+  /* dvh, not vh: on phones vh counts the area behind the browser's address
+     bar, so a 90vh modal runs below the fold and its sticky Add button hides
+     under the browser chrome. dvh measures the actually-visible height. The vh
+     line is a fallback for the few engines without dvh. */
   max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
   animation: rise 0.22s var(--ease-out);
 }
