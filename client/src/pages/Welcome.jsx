@@ -116,9 +116,9 @@ function Hero({ onStart, onLogin, tilt }) {
         <div className="wl-pulse" /><div className="wl-pulse" style={{ animationDelay: '1.2s' }} />
         <div className="wl-ring-dashed" />
         <div className="wl-orbit">
-          {chip(bowl, '#4ade80', '#052e16', 'Saved Rs 450', 'Biryani with friends', { position: 'absolute', left: 150, top: -26 }, 0.9)}
-          {chip(car, '#8fb3ff', '#0b1b4a', 'Careem ride Rs 320', 'Transport', { position: 'absolute', left: -14, top: 236 }, 1.1)}
-          {chip(book, '#f5c46b', '#3a2600', 'Semester fee', 'Planned for Oct', { position: 'absolute', left: 190, top: 215 }, 1.3)}
+          {chip(bowl, '#4ade80', '#052e16', 'Saved Rs 450', 'Biryani with friends', { position: 'absolute', left: 118, top: -18 }, 0.9)}
+          {chip(car, '#8fb3ff', '#0b1b4a', 'Careem Rs 320', 'Transport', { position: 'absolute', left: -8, top: 150 }, 1.1)}
+          {chip(book, '#f5c46b', '#3a2600', 'Semester fee', 'Planned for Oct', { position: 'absolute', left: 120, top: 188 }, 1.3)}
         </div>
         <div className="wl-coinwrap">
           <div className="wl-coin3d">
