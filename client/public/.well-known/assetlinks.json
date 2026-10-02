@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.campuscoin.app",
+      "sha256_cert_fingerprints": [
+        "39:B1:BA:96:42:AA:B6:CC:86:19:78:40:F9:2D:AC:B2:FC:B0:FC:F6:04:DD:4C:E1:F1:36:1C:DE:82:D5:A7:0C"
+      ]
+    }
+  }
+]
