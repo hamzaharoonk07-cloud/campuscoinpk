@@ -322,6 +322,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
 }
 .d9-notice svg { color: var(--blue-deep); }
 .d9-notice span { color: var(--muted); }
+.d9-season-emoji { font-size: 1.1rem; line-height: 1; }
 
 .d9-card {
   display: flex;

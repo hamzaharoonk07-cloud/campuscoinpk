@@ -8,6 +8,7 @@ import { formatDate, money, monthKey, slotColor } from '../lib/format.js';
 import { markFor } from '../lib/methods.js';
 import CountUp from '../components/CountUp.jsx';
 import QuickPhrase from '../components/QuickPhrase.jsx';
+import SeasonBanner from '../components/SeasonBanner.jsx';
 import { DonutChart, MonthBars } from '../components/DashCharts.jsx';
 import { artUrl, categoryArt, CategoryIcon, WalletArt } from '../components/Illustrations.jsx';
 import Avatar from '../components/Avatar.jsx';
@@ -379,6 +380,8 @@ export default function Dashboard() {
       />
 
       <QuickPhrase categories={categories} onSaved={load} />
+
+      <SeasonBanner />
 
       {announcements?.length ? (
         <div className="d9-notice">
