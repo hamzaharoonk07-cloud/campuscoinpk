@@ -326,9 +326,14 @@ export function Modal({ title, onClose, children }) {
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
+    // The mobile bottom nav and the Coin chat button sit in their own stacking
+    // contexts and can overlap the modal's action buttons; hide them while a
+    // modal is open (see body.modal-open rules in app.css).
+    document.body.classList.add('modal-open');
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
     };
   }, [onClose]);
 

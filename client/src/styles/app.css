@@ -1130,12 +1130,19 @@ table.data tbody tr:last-child td { border-bottom: 0; }
    Modal, toast, menu
    =========================================================================== */
 
+/* While a modal is open, hide the mobile bottom nav and the Coin chat button so
+   they can never overlap the modal's action buttons (they live in their own
+   stacking contexts, so z-index alone isn't reliable). */
+body.modal-open .tabbar,
+body.modal-open .chat-fab,
+body.modal-open .chat-hint { display: none !important; }
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
   /* Above the mobile bottom nav (.tabbar z-index 71) and the chat FAB, so the
      modal's Cancel/Add buttons are never covered by them on a phone. */
-  z-index: 90;
+  z-index: 200;
   /* Height from dvh so the modal centres within the visible area, not behind
      the mobile address bar (see .modal). */
   height: 100vh;

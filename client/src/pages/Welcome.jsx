@@ -135,7 +135,6 @@ function Hero({ onStart, onLogin, tilt }) {
         </h1>
         <p className="wl-sub wl-up" style={{ animationDelay: '1.05s' }}>The money app for university students in Pakistan. Chai, rickshaws, rent and allowance in one calm place.</p>
         <div style={{ height: 4 }} />
-        <button type="button" className="wl-cta wl-up" style={{ animationDelay: '1.2s' }} onClick={() => { haptic(); onStart(); }}>Get started<Arrow /><span className="wl-shine" /></button>
         <button type="button" className="wl-link wl-up" style={{ animationDelay: '1.35s' }} onClick={onLogin}>I already have an account</button>
       </div>
     </div>
@@ -185,7 +184,6 @@ function Log({ feat, onNext, onSkip }) {
         <h2 className="wl-h2"><span>Log it in <span className="wl-mintword">seconds.</span></span></h2>
         <p className="wl-sub">Type it and Campus Coin picks the category. Snap a receipt and it reads the total, shop and date, right on your phone.</p>
         <div style={{ height: 4 }} />
-        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Next<Arrow /><span className="wl-shine" /></button>
       </div>
     </div>
   );
@@ -233,7 +231,6 @@ function Budget({ feat, onNext, onSkip }) {
         <h2 className="wl-h2"><span>See where it <span className="wl-mintword">goes.</span></span></h2>
         <p className="wl-sub">Set a cap for each category. Campus Coin tells you once at 80% and once if you go over, never on every purchase.</p>
         <div style={{ height: 4 }} />
-        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Next<Arrow /><span className="wl-shine" /></button>
       </div>
     </div>
   );
@@ -276,7 +273,6 @@ function Coin({ feat, onNext, onSkip }) {
         <h2 className="wl-h2"><span>Ask Coin <span className="wl-mintword">anything.</span></span></h2>
         <p className="wl-sub">Can you afford it? Where did the money go? Coin answers in plain words, from your own spending.</p>
         <div style={{ height: 4 }} />
-        <button type="button" className="wl-cta" onClick={() => { haptic(); onNext(); }}>Create my account<Arrow /><span className="wl-shine" /></button>
       </div>
     </div>
   );
@@ -317,6 +313,16 @@ export default function Welcome() {
   // Mark the visitor welcomed when they reach the join step or leave the flow.
   const markWelcomed = () => { try { localStorage.setItem('campuscoin.welcomed', '1'); } catch { /* ignore */ } };
   const go = (n) => { const c = Math.max(0, Math.min(4, n)); if (c === 4) markWelcomed(); setStep(c); };
+
+  // Stories-style auto-forward: each welcome step advances on its own (synced to
+  // the 5s progress bar); the join step (4) waits for the user. Any manual
+  // swipe/arrow/skip resets the timer via the step dependency. Held during the
+  // intro splash.
+  useEffect(() => {
+    if (intro || step >= 4) return undefined;
+    const id = setTimeout(() => go(step + 1), 5200);
+    return () => clearTimeout(id);
+  }, [step, intro]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'ArrowRight') go(step + 1); else if (e.key === 'ArrowLeft') go(step - 1); };
