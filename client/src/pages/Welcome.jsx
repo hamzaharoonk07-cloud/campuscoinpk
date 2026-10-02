@@ -243,11 +243,11 @@ function Budget({ feat, onNext, onSkip }) {
 function Coin({ feat, onNext, onSkip }) {
   const t = useElapsed('coin');
   const words = SAMPLE.answer.split(' ');
-  const showTyping = !reduced && t < 1.1;
-  const shown = reduced ? words.length : Math.floor(Math.max(0, (t - 1.1)) / 0.07);
+  const showTyping = !reduced && t < 0.9;
+  const shown = reduced ? words.length : Math.floor(Math.max(0, (t - 0.9)) / 0.05);
   const streaming = shown < words.length && !reduced;
   const answer = reduced ? SAMPLE.answer : words.slice(0, shown).join(' ');
-  const statsT = Math.max(0, t - (1.1 + words.length * 0.07) - 0.2);
+  const statsT = Math.max(0, t - (0.9 + words.length * 0.05) - 0.1);
   const tiles = [
     ['Left now', countTo(8510, statsT, 0, 0.9), false],
     ['After 2,000', countTo(6510, statsT, 0.1, 0.9), false],

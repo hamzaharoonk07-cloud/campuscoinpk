@@ -185,9 +185,9 @@
 /* --- Step 4: Ask Coin ---------------------------------------------------- */
 .wl-coinhead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .wl-halo { position: relative; width: 56px; height: 56px; flex: none; display: grid; place-items: center; border-radius: 50%; }
-.wl-halo::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; background: conic-gradient(from 0deg, #22c55e, #5b91ff, #6ee7b7, #22c55e); animation: wl-orbit 4s linear infinite; filter: blur(2px); opacity: 0.8; }
-.wl-halo::after { content: ""; position: absolute; inset: 1px; border-radius: 50%; background: #0b0d10; }
-.wl-halo svg { position: relative; }
+.wl-halo::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; background: conic-gradient(from 0deg, #22c55e, #5b91ff, #6ee7b7, #22c55e); animation: wl-orbit 4s linear infinite; filter: blur(2px); opacity: 0.8; z-index: 0; }
+.wl-halo::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: #0b0d10; z-index: 1; }
+.wl-halo svg { position: relative; z-index: 2; }
 .wl-coinhead b { font-size: 17px; font-weight: 700; }
 .wl-coinhead em { font-style: normal; font-size: 14px; color: #6ee7b7; display: flex; align-items: center; gap: 6px; }
 .wl-dotgreen { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
