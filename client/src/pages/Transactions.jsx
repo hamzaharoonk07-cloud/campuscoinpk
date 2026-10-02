@@ -230,7 +230,19 @@ export default function Transactions() {
                     </span>
                   </div>
                   {group.rows.map((row) => (
-                    <button type="button" className="ledger-row" key={row._id} onClick={() => setEditing(row)}>
+                    <div
+                      className="ledger-row"
+                      key={row._id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setEditing(row)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setEditing(row);
+                        }
+                      }}
+                    >
                       <CategoryIcon icon={row.category?.icon} slot={row.category?.slot} size={42} text={row.description} />
                       <span className="ledger-main">
                         <span className="ledger-title">{row.description || row.category?.name}</span>
@@ -275,7 +287,19 @@ export default function Transactions() {
                         {row.type === 'income' ? '+' : '−'}
                         {money(row.amount, currency).replace('−', '')}
                       </span>
-                    </button>
+                      <button
+                        type="button"
+                        className="ledger-del"
+                        title="Delete this transaction"
+                        aria-label="Delete this transaction"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          remove(row);
+                        }}
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               ))}

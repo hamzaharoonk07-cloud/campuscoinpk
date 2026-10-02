@@ -1,0 +1,14 @@
+{
+  "name": "Campus Coin",
+  "short_name": "Campus Coin",
+  "description": "A budget and expense tracker built for university students.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#121214",
+  "theme_color": "#22c55e",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ]
+}
