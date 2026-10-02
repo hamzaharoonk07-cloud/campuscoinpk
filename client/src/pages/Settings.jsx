@@ -31,6 +31,66 @@ const SCALES = [
  * as a transaction - no third-party automation app involved. On the website
  * there is nothing to turn on, so it points the student to the app instead.
  */
+/* Auto-catch on the web / TWA: a per-account webhook that a free automation app
+   (MacroDroid / Tasker / iOS Shortcuts) posts each bank SMS to as it arrives, so
+   transactions log themselves with the app closed - no paid SMS gateway. */
+function WebhookSmsSetup() {
+  const toast = useToast();
+  const [state, setState] = useState(null);
+  const [key, setKey] = useState('');
+  const [busy, setBusy] = useState(false);
+  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhook/sms`;
+
+  useEffect(() => { api.get('/auth/webhook-key').then(setState).catch(() => {}); }, []);
+
+  const generate = async () => {
+    setBusy(true);
+    try {
+      const { key: k } = await api.post('/auth/webhook-key', {});
+      setKey(k);
+      setState({ active: true });
+      toast.success('Key created', 'Copy it into your automation app now — it is shown only once.');
+    } catch (err) {
+      toast.error('Could not create a key', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const copy = (t) => { try { navigator.clipboard.writeText(t); toast.success('Copied'); } catch { /* clipboard blocked */ } };
+  const field = (label, value) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label className="small muted">{label}</label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input readOnly value={value} onFocus={(e) => e.target.select()} style={{ flex: 1, minWidth: 0 }} />
+        <button type="button" className="btn btn-sm" onClick={() => copy(value)}>Copy</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="security-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.85rem' }}>
+      <span>
+        <strong>Auto-catch bank SMS</strong>
+        <small>Forward your bank&rsquo;s SMS alerts to Campus Coin and each one logs itself — no paid SMS, works with the app closed. Set it up once in a free automation app: MacroDroid or Tasker on Android, Shortcuts on iPhone.</small>
+      </span>
+      {!key ? (
+        <button type="button" className="btn btn-primary btn-sm" onClick={generate} disabled={busy} style={{ alignSelf: 'flex-start' }}>
+          {busy ? 'Creating…' : state?.active ? 'Create a new key' : 'Set up auto-catch'}
+        </button>
+      ) : (
+        <>
+          {field('Webhook URL', url)}
+          {field('Your key (shown once)', key)}
+          <p className="small muted" style={{ margin: 0, lineHeight: 1.5 }}>
+            In MacroDroid/Tasker: <strong>Trigger</strong> = SMS received (from your bank sender). <strong>Action</strong> = HTTP POST to the URL above, add header <code>x-webhook-key</code> set to your key, and a JSON body <code>{'{"text": "[sms_message]"}'}</code>. On iPhone, use a Shortcuts automation &ldquo;When I get a message&rdquo; → Get Contents of URL (POST).
+          </p>
+        </>
+      )}
+      {state?.active && !key ? <small className="muted">Already set up. Create a new key only to replace the old one.</small> : null}
+    </div>
+  );
+}
+
 function NativeSmsSetup() {
   const toast = useToast();
   const [status, setStatus] = useState(null);
@@ -40,16 +100,11 @@ function NativeSmsSetup() {
     if (isNative()) smsStatus().then(setStatus).catch(() => {});
   }, []);
 
-  // On the website there is no SMS access to grant - it only works in the app.
+  // On the website (and the TWA) there is no direct SMS access, so auto-catch
+  // works by forwarding bank SMS to a per-account webhook from a free automation
+  // app - no paid SMS, no restricted permissions.
   if (!isNative()) {
-    return (
-      <div className="security-row">
-        <span>
-          <strong>Automatic bank-SMS logging</strong>
-          <small>Open the Campus Coin app on your Android phone to turn this on - it reads your bank&rsquo;s SMS alerts and logs each one for you.</small>
-        </span>
-      </div>
-    );
+    return <WebhookSmsSetup />;
   }
 
   const setUp = async () => {
