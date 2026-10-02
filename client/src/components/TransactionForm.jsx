@@ -117,7 +117,24 @@ export default function TransactionForm({ categories, existing, preset, onSaved,
         onSaved?.(transaction);
       } else {
         const data = await api.post('/transactions', { ...payload, aiSuggestedCategory: proposed.current });
-        toast.success('Transaction added');
+        // An Undo right on the confirmation, not buried behind a delete
+        // button on the ledger row - the save that most needs undoing is
+        // the one still fresh in mind, a tap after Save.
+        toast.push('Transaction added', {
+          tone: 'good',
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              api
+                .del(`/transactions/${data.transaction._id}`)
+                .then(() => {
+                  toast.success('Removed');
+                  onSaved?.(null);
+                })
+                .catch((err) => toast.error('Could not undo that', err.message));
+            },
+          },
+        });
         // Unusual-amount and duplicate warnings are raised here, not buried.
         data.warnings?.forEach((warning) => toast.push('Worth a look', { body: warning, tone: 'warn', ms: 8000 }));
         data.alerts?.forEach((alert) => toast.push(alert.title, { body: alert.body, tone: 'bad', ms: 8000 }));

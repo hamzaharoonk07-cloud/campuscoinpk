@@ -62,7 +62,7 @@ const DAY_ART = {
  * morning, bright blue in the afternoon, deep navy in the evening and black
  * at night.
  */
-function GreetingCard({ user, line, balance, currency, onAdd }) {
+function GreetingCard({ user, line, balance, currency, pace, onAdd }) {
   const { words, part } = greetingFor();
   const [big, small, spark] = DAY_ART[part];
   const first = user?.name?.split(' ')[0] || 'there';
@@ -83,6 +83,14 @@ function GreetingCard({ user, line, balance, currency, onAdd }) {
           <span className={`d9-greet-chip${balance < 0 ? ' is-over' : ''}`}>
             {balance < 0 ? `${money(-balance, currency)} over this month` : `${money(balance, currency)} kept this month`}
           </span>
+          {/* The days-left budget, as its own figure rather than only inside the
+              sentence above - low enough and the pill turns into a pocket-money
+              runway warning rather than a plain fact. */}
+          {pace ? (
+            <span className={`d9-greet-chip${pace.low ? ' is-low' : ''}`}>
+              {money(pace.perDay, currency)}/day &middot; {pace.daysLeft} {pace.daysLeft === 1 ? 'day' : 'days'} left
+            </span>
+          ) : null}
           <button type="button" className="d9-greet-add" onClick={onAdd}>
             <Icon name="plus" size={15} />
             Add a transaction
@@ -122,6 +130,27 @@ function personalLine({ totals, goal, month, currency }) {
     return `${days}. You are ${money(-spare, currency)} short of your ${money(goal.target, currency)} goal, so hold spending where it is.`;
   }
   return `${days} - about ${money(Math.floor((goal.target > 0 ? spare : totals.balance) / daysLeft), currency)} a day to spend${goal.target > 0 ? ' and still hit your goal' : ''}.`;
+}
+
+/**
+ * The days-left budget as a figure: what's left (after any savings goal) spread
+ * across the days remaining in the month. Compared against this month's average
+ * daily spend so far, so "low" means the pace ahead is noticeably tighter than
+ * the pace behind - a pocket-money runway warning, not just a number turning
+ * red at an arbitrary line.
+ */
+function dailyPace({ totals, goal, month }) {
+  const now = new Date();
+  if (month !== monthKey(now)) return null;
+  if (totals.income === 0 && totals.expense === 0) return null;
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysLeft = daysInMonth - now.getDate() + 1;
+  const spare = totals.balance - Math.max(0, goal.target || 0);
+  const perDay = Math.max(0, Math.floor(spare / daysLeft));
+  const elapsed = now.getDate();
+  const avgSoFar = elapsed > 0 ? totals.expense / elapsed : 0;
+  const low = spare <= 0 || (avgSoFar > 0 && perDay < avgSoFar * 0.5);
+  return { perDay, daysLeft, low };
 }
 
 /** Percentage change from last month, or null when there is nothing to compare. */
@@ -337,6 +366,7 @@ export default function Dashboard() {
         line={personalLine({ totals, goal, month, currency })}
         balance={totals.balance}
         currency={currency}
+        pace={dailyPace({ totals, goal, month })}
         onAdd={() => setAdding(true)}
       />
 

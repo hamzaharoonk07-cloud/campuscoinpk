@@ -1012,6 +1012,10 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
 .d9-greet-chip.is-over { color: #ff8a8e; }
 .d9-greet.is-afternoon .d9-greet-chip.is-over { background: #fff; color: var(--bad); }
 .d9-greet.is-morning .d9-greet-chip.is-over { color: var(--bad); }
+/* The pocket-money runway warning: the same pill, in the warning colour,
+   once what's left per day gets uncomfortably thin. */
+.d9-greet-chip.is-low { color: var(--warn); }
+.d9-greet.is-afternoon .d9-greet-chip.is-low { background: #fff; color: var(--warn); }
 .d9-greet-add {
   display: inline-flex;
   align-items: center;
