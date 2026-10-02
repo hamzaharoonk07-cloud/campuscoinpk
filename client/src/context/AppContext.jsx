@@ -209,6 +209,13 @@ export function AuthProvider({ children }) {
         setToken(data.token);
         adopt(data.user);
         greetNext({ kind: 'new' });
+        // Shows the step-by-step feature tour (components/FeatureGuide.jsx)
+        // once, the first time this brand-new account opens the app.
+        try {
+          localStorage.setItem('campuscoin.tour', '1');
+        } catch {
+          /* private mode - the tour just never shows, not worth breaking on */
+        }
         return data.user;
       },
       async loginWithGoogle(credential) {

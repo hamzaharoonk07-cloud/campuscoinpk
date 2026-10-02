@@ -3308,11 +3308,14 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   gap: 0.4rem;
   background: #25d366;
   color: #04301a;
+  border: 0;
   border-radius: 999px;
   padding: 0.4rem 0.8rem;
+  font: inherit;
   font-weight: 700;
   font-size: var(--step--1);
   text-decoration: none;
+  cursor: pointer;
 }
 .udhaar-remind:hover { filter: brightness(1.05); }
 

@@ -128,7 +128,7 @@ function checkTwoFactorCode(user, code) {
 router.post(
   '/register',
   wrap(async (req, res) => {
-    const { name, email, password, academicYear, institution, monthlyAllowance, savingsGoal, currency } = req.body;
+    const { name, email, phone, password, academicYear, institution, monthlyAllowance, savingsGoal, currency } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email and password are all required' });
@@ -142,6 +142,7 @@ router.post(
     const user = new User({
       name,
       email,
+      phone: phone || '',
       academicYear: academicYear || '',
       institution: institution || '',
       monthlyAllowance: Number(monthlyAllowance) || 0,

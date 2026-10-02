@@ -4,7 +4,6 @@ import Layout, { MonthPicker, openChat } from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
 import { artUrl, CategoryIcon, SproutArt } from '../components/Illustrations.jsx';
 import PersonalityCard from '../components/PersonalityCard.jsx';
-import ZakatCalculator from '../components/ZakatCalculator.jsx';
 import { api } from '../lib/api.js';
 import { compactMoney, formatDate, money, monthKey, monthLabel } from '../lib/format.js';
 import { useAuth, useToast } from '../context/AppContext.jsx';
@@ -312,8 +311,6 @@ export default function Insights() {
             </section>
 
             <div className="in-side">
-              <ZakatCalculator />
-
               <section className="in-card">
                 <div className="in-head">
                   <h3>Your spending week</h3>

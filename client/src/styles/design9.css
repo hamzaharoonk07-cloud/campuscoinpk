@@ -941,8 +941,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   --g-glow: rgba(255, 196, 92, 0.55);
   position: relative;
   overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(160px, 300px);
+  display: block;
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;

@@ -47,15 +47,6 @@ function greetingFor(date = new Date()) {
   return { words: 'Good night', part: 'night' };
 }
 
-// The picture for each part of the day: a big object, a small one and a
-// sparkle, placed on the right of the greeting card.
-const DAY_ART = {
-  morning: ['sunrise', 'hot-beverage', 'sparkles'],
-  afternoon: ['sun-behind-small-cloud', 'books', 'cloud'],
-  evening: ['crescent-moon', 'glowing-star', 'sparkles'],
-  night: ['owl', 'crescent-moon', 'glowing-star'],
-};
-
 /**
  * The greeting at the top of the dashboard: the student's photo, a greeting
  * for the time of day, today's date and one line from their own numbers, on
@@ -63,9 +54,8 @@ const DAY_ART = {
  * morning, bright blue in the afternoon, deep navy in the evening and black
  * at night.
  */
-function GreetingCard({ user, line, balance, currency, pace, streak, onAdd }) {
+function GreetingCard({ user, line, balance, currency, pace, onAdd }) {
   const { words, part } = greetingFor();
-  const [big, small, spark] = DAY_ART[part];
   const first = user?.name?.split(' ')[0] || 'there';
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   return (
@@ -92,24 +82,11 @@ function GreetingCard({ user, line, balance, currency, pace, streak, onAdd }) {
               {money(pace.perDay, currency)}/day &middot; {pace.daysLeft} {pace.daysLeft === 1 ? 'day' : 'days'} left
             </span>
           ) : null}
-          {/* No-spend streak - yesterday backward, so it never claims credit
-              for a today that could still break it. */}
-          {streak?.hasHistory && streak.current > 0 ? (
-            <span className="d9-greet-chip is-streak">
-              &#128293; {streak.current}-day no-spend streak
-            </span>
-          ) : null}
           <button type="button" className="d9-greet-add" onClick={onAdd}>
             <Icon name="plus" size={15} />
             Add a transaction
           </button>
         </div>
-      </div>
-      <div className="d9-greet-art" aria-hidden="true">
-        <span className="d9-greet-glow" />
-        <img className="is-big" src={artUrl(big)} alt="" />
-        <img className="is-small" src={artUrl(small)} alt="" />
-        <img className="is-spark" src={artUrl(spark)} alt="" />
       </div>
     </section>
   );
@@ -368,7 +345,7 @@ export default function Dashboard() {
     );
   }
 
-  const { totals, spending, trend, tips, recent, insight, budgets, goal, announcements, methods, flow, methodsIn, streak } = data;
+  const { totals, spending, trend, tips, recent, insight, budgets, goal, announcements, methods, flow, methodsIn } = data;
   // Last month, for the change chips: the trend ends with the month shown.
   const before = trend.length > 1 ? trend[trend.length - 2] : null;
   const [year, monthIndex] = month.split('-').map(Number);
@@ -387,7 +364,6 @@ export default function Dashboard() {
         balance={totals.balance}
         currency={currency}
         pace={dailyPace({ totals, goal, month })}
-        streak={streak}
         onAdd={() => setAdding(true)}
       />
 

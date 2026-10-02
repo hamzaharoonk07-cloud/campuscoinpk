@@ -5,6 +5,7 @@ import Icon, { BrandMark } from './Icon.jsx';
 import CoinBot from './CoinBot.jsx';
 import Chat from './Chat.jsx';
 import WelcomeBack from './WelcomeBack.jsx';
+import FeatureGuide from './FeatureGuide.jsx';
 import Notifications from './Notifications.jsx';
 import Avatar from './Avatar.jsx';
 import { api } from '../lib/api.js';
@@ -477,6 +478,7 @@ export default function Layout({ title, subtitle, crumbs, actions, children }) {
 
       {!isAdmin && <ChatLauncher />}
       {!isAdmin && <WelcomeBack />}
+      {!isAdmin && <FeatureGuide />}
 
       {!isAdmin && (
         <TabBar onSignOut={signOut} />

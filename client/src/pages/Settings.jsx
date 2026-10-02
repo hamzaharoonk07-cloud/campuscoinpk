@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
 import Avatar from '../components/Avatar.jsx';
-import AssistantMemory from '../components/AssistantMemory.jsx';
 import { squarePhoto } from '../lib/images.js';
 import { api, setToken } from '../lib/api.js';
 import { artUrl } from '../components/Illustrations.jsx';
@@ -11,6 +10,7 @@ import { CURRENCY_SYMBOLS, formatDate } from '../lib/format.js';
 import { StudyOptions, studyLabel } from '../lib/study.jsx';
 import { useAuth, useTheme, useToast } from '../context/AppContext.jsx';
 import { isNative, smsStatus, smsRequestPermission, smsConfigure, smsSetEnabled } from '../lib/smsForwarder.js';
+import { startFeatureTour } from '../components/FeatureGuide.jsx';
 
 const SCALES = [
   { value: 0.875, label: 'Small' },
@@ -470,10 +470,20 @@ export default function Settings() {
           <a href="#password">
             <Icon name="key" size={15} /> Password
           </a>
-          <a href="#coin">
-            <Icon name="chat" size={15} /> Coin
-          </a>
         </nav>
+      </section>
+
+      <section className="panel">
+        <div className="panel-body security-row">
+          <span>
+            <strong>Core features</strong>
+            <small>Phrase entry, automatic SMS logging, budgets, udhaar, committees and insights - a quick tour of each.</small>
+          </span>
+          <button type="button" className="btn btn-sm" onClick={startFeatureTour}>
+            <Icon name="spark" size={14} />
+            Take the tour
+          </button>
+        </div>
       </section>
 
       <div className="grid grid-2">
@@ -739,10 +749,6 @@ export default function Settings() {
               <WebhookKey />
             </div>
           </section>
-
-          <div id="coin">
-            <AssistantMemory />
-          </div>
         </div>
       </div>
     </Layout>

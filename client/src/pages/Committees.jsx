@@ -225,6 +225,14 @@ export default function Committees() {
 
   return (
     <Layout title="Committees">
+      <p className="security-note" style={{ marginBottom: '1rem' }}>
+        <Icon name="repeat" size={16} />
+        What this is: a committee (kameti/BC) is a group of friends who each put in the same
+        amount every round. One member takes the whole pot each round, in turn, until everyone
+        has had theirs once. Add everyone below in the order they'll be paid - member 1 gets
+        round 1, member 2 gets round 2, and so on. Tick a name off once they've paid their
+        share, then "Close this round" to hand the pot to that round's member and move to the next.
+      </p>
       <CreateForm onAdded={load} />
 
       {!committees ? (

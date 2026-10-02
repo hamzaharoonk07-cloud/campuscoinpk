@@ -40,10 +40,11 @@ function Protected({ children, admin = false }) {
   if (admin && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   // An administrator has no student dashboard, so send them where they belong.
   if (!admin && user.role === 'admin') return <Navigate to="/admin" replace />;
-  // Every account needs a contact number on file, and a Google sign-up still
-  // needs the rest of the usual signup form filled in once. Blocks the page,
-  // not just a banner on it, until saved.
-  if (!admin && (!user.phone || !user.profileComplete)) return <RequireProfile />;
+  // Only a Google sign-up hits this - it skips the usual signup form
+  // entirely, so it is asked once, right after, instead of before. An
+  // account that already completed signup (including an old one that
+  // predates the phone field) is never interrupted by this again.
+  if (!admin && !user.profileComplete) return <RequireProfile />;
 
   return children;
 }

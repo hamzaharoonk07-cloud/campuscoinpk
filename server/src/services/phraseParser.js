@@ -14,20 +14,34 @@ import { suggestCategory } from './categorizer.js';
 // the student to confirm, and the normal save path does the writing.
 // ---------------------------------------------------------------------------
 
-// Roman Urdu / English words that mean money came IN. Everything else is an
-// expense, because that is what students log ninety-nine times in a hundred.
+// Roman Urdu / English words that mean money came IN, unambiguously, on
+// their own. Everything else is an expense, because that is what students
+// log ninety-nine times in a hundred.
 const INCOME_CUES = [
   'allowance', 'salary', 'stipend', 'scholarship', 'wazifa', 'wazeefa',
   'refund', 'cashback', 'bonus', 'received', 'recieved', 'earned',
-  'mila', 'mili', 'milay', 'mili', 'milgaye', 'gaye', // "mil gaye / paise mile"
-  'aya', 'aaya', 'ayi', 'aayi', 'aye', 'bheja', 'bheje', 'diye', 'diya', 'di',
-  'kamaya', 'kamaye', 'kamai', 'wapas', 'wapis', 'jeeb', 'pocket',
+  'mila', 'mili', 'milay', 'milgaye', 'gaye', // "mil gaye / paise mile"
+  'aya', 'aaya', 'ayi', 'aayi', 'aye',
+  'kamaya', 'kamaye', 'kamai', 'jeeb', 'pocket',
   'tuition', 'freelance', 'fiverr', 'upwork',
-  // Whoever is handing the money over, and the two words for a cash gift -
+  'eidi', 'salami',
   // 'kharcha' ("expense") used to sit in this list too, which biased a plain
   // expense phrase like "ghar ka kharcha 2000" toward income; dropped.
-  'ammi', 'abbu', 'abu', 'ami', 'walid', 'walida', 'papa', 'mama', 'eidi', 'salami',
+  // 'wapas'/'wapis' ("back") used to sit here too - "paisa wapas aaya" is
+  // income, but "udhaar wapas kiya" (paying a loan back) is an expense, and
+  // the word alone can't tell those apart, so it was dropped; 'aaya' above
+  // still catches the first case on its own.
 ];
+
+// Whoever is handing the money over - on their own these are neutral (they
+// also show up describing an expense, "ammi ke liye tofa"), so they only tip
+// the balance toward income when paired with a "gave/sent" word below.
+const SENDER_WORDS = ['ammi', 'abbu', 'abu', 'ami', 'walid', 'walida', 'papa', 'mama'];
+
+// "Gave/sent" - income only when paired with a sender above ("ammi ne diye");
+// on its own, or with "ko" ("dost ko diye", "kiraya ... diya" - gave money
+// TO someone or something), this is money going OUT, the opposite case.
+const GAVE_WORDS = ['bheja', 'bheje', 'diye', 'diya', 'di'];
 
 // Roman Urdu number words, used only when the phrase has no digits at all.
 // Small whole numbers plus the two multipliers students say out loud.
@@ -102,7 +116,13 @@ function cleanWords(text) {
 /** Decides money in vs out from the words used. Expense unless a cue says otherwise. */
 export function detectType(phrase) {
   const words = new Set(String(phrase || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/));
-  return INCOME_CUES.some((cue) => words.has(cue)) ? 'income' : 'expense';
+  if (INCOME_CUES.some((cue) => words.has(cue))) return 'income';
+  // "diya/diye/bheja..." alone is money going OUT ("kiraya diya", "dost ko
+  // diye") - it only means money coming IN when who sent it is also named
+  // ("ammi ne diye"), and "ko" ("to [someone]") always means it went out
+  // even then, since it says who the money was given to, not who gave it.
+  if (!words.has('ko') && GAVE_WORDS.some((w) => words.has(w)) && SENDER_WORDS.some((w) => words.has(w))) return 'income';
+  return 'expense';
 }
 
 /**

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import Layout from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
+import { Modal } from '../components/TransactionForm.jsx';
+import UdhaarReminderCard from '../components/UdhaarReminderCard.jsx';
 import { api } from '../lib/api.js';
 import { money } from '../lib/format.js';
 import { formatDate } from '../lib/format.js';
@@ -24,7 +26,7 @@ function whatsappReminder(person, phone, amount, currency) {
   return `${base}?text=${encodeURIComponent(text)}`;
 }
 
-function AddForm({ onAdded }) {
+function AddForm({ onAdded, currency }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [person, setPerson] = useState('');
@@ -33,6 +35,11 @@ function AddForm({ onAdded }) {
   const [phone, setPhone] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  // Set right after a successful save, when it's money owed TO the student
+  // (a reminder card makes no sense the other way round) - shows the
+  // branded card for this exact entry straight away, not only once they
+  // later tap Remind.
+  const [justAdded, setJustAdded] = useState(null);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -40,6 +47,7 @@ function AddForm({ onAdded }) {
     setBusy(true);
     try {
       await api.post('/udhaar', { person, amount: Number(amount), direction, phone, note });
+      if (direction === 'owed_to_me') setJustAdded({ person, amount: Number(amount), note });
       setPerson('');
       setAmount('');
       setPhone('');
@@ -54,16 +62,36 @@ function AddForm({ onAdded }) {
     }
   };
 
+  const card = justAdded ? (
+    <Modal title="Udhaar noted" onClose={() => setJustAdded(null)}>
+      <div className="stack">
+        <UdhaarReminderCard person={justAdded.person} amount={justAdded.amount} currency={currency} note={justAdded.note} />
+        <p className="small muted" style={{ textAlign: 'center' }}>
+          Saved - this card is ready whenever you want to remind {justAdded.person}.
+        </p>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-primary" onClick={() => setJustAdded(null)}>
+            Done
+          </button>
+        </div>
+      </div>
+    </Modal>
+  ) : null;
+
   if (!open) {
     return (
-      <button type="button" className="udhaar-add-btn" onClick={() => setOpen(true)}>
-        <Icon name="plus" size={18} />
-        Add an udhaar
-      </button>
+      <>
+        <button type="button" className="udhaar-add-btn" onClick={() => setOpen(true)}>
+          <Icon name="plus" size={18} />
+          Add an udhaar
+        </button>
+        {card}
+      </>
     );
   }
 
   return (
+    <>
     <form className="udhaar-form" onSubmit={submit}>
       <div className="udhaar-dir" role="group" aria-label="Who owes whom">
         <button type="button" className={direction === 'owed_to_me' ? 'is-on' : ''} onClick={() => setDirection('owed_to_me')}>
@@ -97,6 +125,8 @@ function AddForm({ onAdded }) {
         </button>
       </div>
     </form>
+    {card}
+    </>
   );
 }
 
@@ -209,6 +239,7 @@ function SplitForm({ onAdded, currency }) {
 function PersonCard({ group, currency, onChange }) {
   const toast = useToast();
   const theyOweMe = group.net > 0;
+  const [showCard, setShowCard] = useState(false);
 
   const settle = async (entry) => {
     try {
@@ -237,17 +268,36 @@ function PersonCard({ group, currency, onChange }) {
           </span>
         </div>
         {theyOweMe ? (
-          <a
-            className="udhaar-remind"
-            href={whatsappReminder(group.person, group.phone, Math.abs(group.net), currency)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <button type="button" className="udhaar-remind" onClick={() => setShowCard(true)}>
             <Icon name="send" size={15} />
             Remind
-          </a>
+          </button>
         ) : null}
       </header>
+
+      {showCard ? (
+        <Modal title={`Remind ${group.person}`} onClose={() => setShowCard(false)}>
+          <div className="stack">
+            <UdhaarReminderCard person={group.person} amount={Math.abs(group.net)} currency={currency} note={group.entries[0]?.note} />
+            <p className="small muted" style={{ textAlign: 'center' }}>
+              Download the card above to attach it, then open WhatsApp with the message ready.
+            </p>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setShowCard(false)}>
+                Close
+              </button>
+              <a
+                className="btn btn-primary"
+                href={whatsappReminder(group.person, group.phone, Math.abs(group.net), currency)}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open WhatsApp
+              </a>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
       <ul className="udhaar-entries">
         {group.entries.map((entry) => (
           <li key={entry._id}>
@@ -305,7 +355,7 @@ export default function Udhaar() {
       </div>
 
       <div className="udhaar-actions-row">
-        <AddForm onAdded={load} />
+        <AddForm onAdded={load} currency={currency} />
         <SplitForm onAdded={load} currency={currency} />
       </div>
 

@@ -16,6 +16,7 @@ export default function Register() {
   const [form, setForm] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirm: '',
     academicYear: '',
@@ -97,6 +98,18 @@ export default function Register() {
             value={form.email}
             onChange={set('email')}
             autoComplete="email"
+          />
+
+          <IconField
+            id="phone"
+            label="Phone number"
+            icon="chat"
+            type="tel"
+            placeholder="03xx xxxxxxx"
+            required
+            value={form.phone}
+            onChange={set('phone')}
+            autoComplete="tel"
           />
 
           <IconField
