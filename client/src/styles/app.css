@@ -1133,7 +1133,9 @@ table.data tbody tr:last-child td { border-bottom: 0; }
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  /* Above the mobile bottom nav (.tabbar z-index 71) and the chat FAB, so the
+     modal's Cancel/Add buttons are never covered by them on a phone. */
+  z-index: 90;
   /* Height from dvh so the modal centres within the visible area, not behind
      the mobile address bar (see .modal). */
   height: 100vh;
