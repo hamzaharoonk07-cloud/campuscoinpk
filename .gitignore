@@ -9,3 +9,13 @@ server/data/
 /shots/
 shot*.mjs
 .env*.local
+
+# Android / TWA build artefacts and the signing key (NEVER commit the keystore)
+*.keystore
+*.jks
+android.keystore
+app-release-*.aab
+app-release-*.apk
+/app/
+twa-manifest-*.json
+signing-key-info.txt
