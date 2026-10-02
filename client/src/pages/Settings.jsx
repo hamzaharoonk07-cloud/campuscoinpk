@@ -25,11 +25,11 @@ const SCALES = [
  * "reveal it again" later, only "generate a new one".
  */
 /**
- * Only real inside the Android app build: turns on the native SMS listener
- * (android/.../SmsReceiver.java), which catches bank SMS directly with no
- * MacroDroid or any other app involved. One tap generates a fresh webhook
- * key (same kind MacroDroid users paste by hand), hands it straight to the
- * native plugin, asks for the SMS permission, and switches it on.
+ * The only SMS setup now: inside the Android app it asks for the SMS
+ * permission directly and turns on the native listener
+ * (android/.../SmsReceiver.java), which catches each bank SMS and logs it
+ * as a transaction - no third-party automation app involved. On the website
+ * there is nothing to turn on, so it points the student to the app instead.
  */
 function NativeSmsSetup() {
   const toast = useToast();
@@ -40,7 +40,17 @@ function NativeSmsSetup() {
     if (isNative()) smsStatus().then(setStatus).catch(() => {});
   }, []);
 
-  if (!isNative()) return null;
+  // On the website there is no SMS access to grant - it only works in the app.
+  if (!isNative()) {
+    return (
+      <div className="security-row">
+        <span>
+          <strong>Automatic bank-SMS logging</strong>
+          <small>Open the Campus Coin app on your Android phone to turn this on - it reads your bank&rsquo;s SMS alerts and logs each one for you.</small>
+        </span>
+      </div>
+    );
+  }
 
   const setUp = async () => {
     setBusy(true);
@@ -79,7 +89,7 @@ function NativeSmsSetup() {
       <div className="security-row">
         <span>
           <strong>On for this phone</strong>
-          <small>Bank SMS logs automatically - no MacroDroid, no app to open.</small>
+          <small>Your bank&rsquo;s SMS alerts are logged automatically, even with the app closed.</small>
         </span>
         <button type="button" className="btn btn-sm" onClick={turnOff} disabled={busy}>
           Turn off
@@ -91,8 +101,8 @@ function NativeSmsSetup() {
   return (
     <div className="security-row">
       <span>
-        <strong>Set up on this phone</strong>
-        <small>Skip MacroDroid entirely - one tap, using the app you're in right now.</small>
+        <strong>Turn on automatic logging</strong>
+        <small>Allow SMS access and Campus Coin reads each bank alert and logs it for you - one tap, nothing else to install.</small>
       </span>
       <button type="button" className="btn btn-primary btn-sm" onClick={setUp} disabled={busy}>
         {busy ? 'Setting up…' : 'Turn on'}
@@ -659,11 +669,10 @@ export default function Settings() {
           <section className="panel" id="webhook">
             <div className="panel-head">
               <h2>Log transactions from bank SMS automatically</h2>
-              <span className="panel-note">5-minute setup, once</span>
+              <span className="panel-note">One tap, in the app</span>
             </div>
             <div className="panel-body">
               <NativeSmsSetup />
-              <WebhookKey />
             </div>
           </section>
         </div>
