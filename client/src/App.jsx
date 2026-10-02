@@ -10,6 +10,7 @@ import ResetPassword from './pages/ResetPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Udhaar from './pages/Udhaar.jsx';
+import Committees from './pages/Committees.jsx';
 import Budgets from './pages/Budgets.jsx';
 import Reports from './pages/Reports.jsx';
 import Insights from './pages/Insights.jsx';
@@ -64,6 +65,7 @@ export default function App() {
       <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
       <Route path="/transactions" element={<Protected><Transactions /></Protected>} />
       <Route path="/udhaar" element={<Protected><Udhaar /></Protected>} />
+      <Route path="/committees" element={<Protected><Committees /></Protected>} />
       <Route path="/budgets" element={<Protected><Budgets /></Protected>} />
       <Route path="/reports" element={<Protected><Reports /></Protected>} />
       <Route path="/insights" element={<Protected><Insights /></Protected>} />
