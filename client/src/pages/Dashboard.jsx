@@ -54,33 +54,76 @@ function greetingFor(date = new Date()) {
  * morning, bright blue in the afternoon, deep navy in the evening and black
  * at night.
  */
-function GreetingCard({ user, line, balance, currency, onAdd }) {
+/* A hand-drawn area sparkline of the month's daily spending - no chart library,
+   so it stays explainable. currentColor lets it take the card's accent on every
+   time-of-day. Falls back to a soft glow when there's nothing to draw yet. */
+function GreetSpark({ daily }) {
+  const pts = (daily || []).map((d) => d.total || 0);
+  const drawable = pts.length >= 2 && pts.some((v) => v > 0);
+  if (!drawable) {
+    return (
+      <div className="d9-greet-art" aria-hidden="true">
+        <span className="d9-greet-glow" />
+      </div>
+    );
+  }
+  const W = 280;
+  const H = 104;
+  const pad = 6;
+  const max = Math.max(...pts, 1);
+  const step = W / (pts.length - 1);
+  const x = (i) => i * step;
+  const y = (v) => H - pad - (v / max) * (H - pad * 2);
+  const line = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+  const area = `${line} L${W} ${H} L0 ${H} Z`;
+  const last = pts.length - 1;
+  return (
+    <div className="d9-spark" aria-hidden="true">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="d9-spark-svg">
+        <defs>
+          <linearGradient id="d9-spark-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="currentColor" stopOpacity="0.32" />
+            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#d9-spark-fill)" />
+        <path d={line} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={x(last)} cy={y(pts[last])} r="3.5" fill="currentColor" />
+      </svg>
+      <span className="d9-spark-cap">Daily spending this month</span>
+    </div>
+  );
+}
+
+function GreetingCard({ user, line, balance, currency, daily, showBalance, onAdd }) {
   const { words, part } = greetingFor();
   const first = user?.name?.split(' ')[0] || 'there';
+  const today = new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' });
+  const over = balance < 0;
   return (
     <section className={`d9-greet is-${part}`} aria-label="Greeting">
       <div className="d9-greet-copy">
+        <span className="d9-greet-date">{today}</span>
         <h2>
-          <Avatar user={user} size={44} />
+          <Avatar user={user} size={40} />
           <span className="d9-greet-name">
             {words}, {first}
           </span>
         </h2>
         <p>{line}</p>
         <div className="d9-greet-actions">
-          <span className={`d9-greet-chip${balance < 0 ? ' is-over' : ''}`}>
-            {balance < 0 ? `${money(-balance, currency)} over this month` : `${money(balance, currency)} kept this month`}
-          </span>
           <button type="button" className="d9-greet-add" onClick={onAdd}>
             <Icon name="plus" size={15} />
             Add a transaction
           </button>
+          {showBalance ? (
+            <span className={`d9-greet-chip${over ? ' is-over' : ''}`}>
+              {over ? `${money(-balance, currency)} over` : `${money(balance, currency)} kept`} this month
+            </span>
+          ) : null}
         </div>
       </div>
-      <div className="d9-greet-art" aria-hidden="true">
-        <span className="d9-greet-glow" />
-        <img src={artUrl('money-bag')} alt="" />
-      </div>
+      <GreetSpark daily={daily} />
     </section>
   );
 }
@@ -98,17 +141,17 @@ function personalLine({ totals, goal, month, currency }) {
       ? `Kept ${money(totals.balance, currency)} that month.`
       : `Ended ${money(-totals.balance, currency)} over that month.`;
   }
-  if (totals.income === 0 && totals.expense === 0) return 'Fresh month — log your allowance to start.';
+  if (totals.income === 0 && totals.expense === 0) return 'Fresh month — log your allowance to get started.';
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
   const days = `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
-  if (totals.balance < 0) return `${money(-totals.balance, currency)} over — a quiet week closes it.`;
+  // The amount itself rides in the pill beside the line, so the line gives the
+  // advice, not the figure again.
+  if (totals.balance < 0) return 'A quiet week would bring it back to even.';
   // What can go out each day and still leave the savings goal intact.
   const spare = totals.balance - Math.max(0, goal.target || 0);
-  if (goal.target > 0 && spare <= 0) {
-    return `${money(-spare, currency)} short of your goal — hold steady.`;
-  }
+  if (goal.target > 0 && spare <= 0) return 'Hold spending steady to stay on track for your goal.';
   const perDay = money(Math.floor((goal.target > 0 ? spare : totals.balance) / daysLeft), currency);
-  return `${perDay} a day · ${days}.`;
+  return `About ${perDay} a day to spend · ${days}.`;
 }
 
 
@@ -337,6 +380,8 @@ export default function Dashboard() {
         line={personalLine({ totals, goal, month, currency })}
         balance={totals.balance}
         currency={currency}
+        daily={daily}
+        showBalance={month === monthKey(new Date())}
         onAdd={() => setAdding(true)}
       />
 
