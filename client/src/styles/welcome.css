@@ -1,121 +1,191 @@
-/* The Careem-style opening screen: full-bleed looping film, brand + ways-in over
-   a dark scrim. Mobile-first; on wider screens the column is capped to a phone. */
-.wel {
+/* Onboarding: a 5-slide swipeable opening (hero -> 3 feature slides -> join).
+   Dark, calm, green-forward, built to match the Campus Coin welcome design. */
+.ob {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #0b0d10;
-  display: flex;
-  justify-content: center;
+  color: #fff;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  /* Dark base with a green glow up top and a cool glow bottom-right, over a
+     faint dotted grid - the backdrop from the design. */
+  background:
+    radial-gradient(90% 55% at 15% 0%, rgba(34, 197, 94, 0.22), transparent 60%),
+    radial-gradient(70% 50% at 100% 100%, rgba(37, 99, 235, 0.16), transparent 60%),
+    #0a0c0e;
 }
-/* Everything here sizes with padding inside its width, so full-width buttons and
-   inputs never spill past the screen edge. */
-.wel, .wel * { box-sizing: border-box; }
-.wel-video {
+.ob::before {
+  content: '';
   position: absolute;
   inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+.ob, .ob * { box-sizing: border-box; }
+
+.ob-track { display: flex; height: 100%; width: 100%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.ob-slide {
+  position: relative;
+  flex: 0 0 100%;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  z-index: 0;
-}
-/* Readability: transparent at the top, deep at the bottom where the buttons are. */
-.wel-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(to bottom, rgba(10, 12, 15, 0.15) 0%, rgba(10, 12, 15, 0.1) 40%, rgba(10, 12, 15, 0.82) 78%, rgba(10, 12, 15, 0.96) 100%);
-}
-.wel-inner {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 440px;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 2rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
-  color: #fff;
+  padding: calc(1.25rem + env(safe-area-inset-top, 0px)) 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
 }
-.wel-brand { margin-bottom: 1.5rem; }
-.wel-brand .wordmark, .wel-brand .wordmark b { color: #fff; font-weight: 700; font-size: 1.5rem; }
-.wel-brand .brand-mark, .wel-brand svg { filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4)); }
-.wel-tag {
-  margin: 0.6rem 0 0;
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+
+/* Top bar: progress segments + Skip (feature slides). */
+.ob-top { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+.ob-prog { display: flex; gap: 0.5rem; flex: 1; }
+.ob-prog span { height: 4px; flex: 1; border-radius: 99px; background: rgba(255, 255, 255, 0.16); transition: background 0.3s; }
+.ob-prog span.on { background: #fff; }
+.ob-skip { background: none; border: 0; color: rgba(255, 255, 255, 0.8); font: 600 0.95rem var(--font-body); cursor: pointer; }
+
+/* Hero header: brand + free pill. */
+.ob-head { display: flex; align-items: center; justify-content: space-between; }
+.ob-brand { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 1.25rem; font-weight: 700; }
+.ob-brand-center { justify-content: center; margin-bottom: 1.5rem; }
+.ob-pill-free { padding: 0.5rem 0.9rem; border-radius: 99px; border: 1px solid rgba(34, 197, 94, 0.5); color: #6ee7b7; font-size: 0.8rem; font-weight: 700; }
+
+/* Hero art: 3D coin, rings, floating chips. */
+.ob-hero-art { position: relative; flex: 1; min-height: 260px; display: grid; place-items: center; }
+.ob-ring { position: absolute; width: 300px; height: 300px; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 50%; }
+.ob-ring2 { width: 210px; height: 210px; border-color: rgba(34, 197, 94, 0.18); }
+.ob-coin3d { filter: drop-shadow(0 20px 30px rgba(21, 128, 61, 0.5)); animation: ob-float 6s ease-in-out infinite; transform: translateZ(0); }
+.ob-coin3d svg { display: block; }
+@keyframes ob-float { 50% { transform: translateY(-8px); } }
+.ob-chip {
+  position: absolute; display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 0.8rem; border-radius: 14px;
+  background: rgba(22, 26, 30, 0.9); border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7);
+  animation: ob-float 5s ease-in-out infinite;
 }
-.wel-actions { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; animation: wel-rise 0.6s var(--ease-out, ease) 0.2s backwards; }
+.ob-chip span:last-child { display: flex; flex-direction: column; line-height: 1.2; }
+.ob-chip b { font-size: 0.9rem; }
+.ob-chip em { font-size: 0.78rem; color: rgba(255, 255, 255, 0.6); font-style: normal; }
+.ob-chip-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 1rem; flex: none; }
+.ob-chip-a { top: 4%; left: 0; animation-delay: 0.2s; }
+.ob-chip-b { top: 40%; right: -6px; animation-delay: 0.9s; }
+.ob-chip-c { bottom: 2%; left: 6%; animation-delay: 1.4s; }
+
+/* Copy + headlines. */
+.ob-copy { margin-top: auto; padding-top: 1rem; }
+.ob-h1 { margin: 0 0 0.8rem; font-size: clamp(2.6rem, 13vw, 3.4rem); line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; }
+.ob-h2 { margin: 0 0 0.6rem; font-size: clamp(1.9rem, 8vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; }
+.ob-h1 .g, .ob-h2 .g { color: #22c55e; }
+.ob-sub { margin: 0; font-size: 1.02rem; line-height: 1.5; color: rgba(255, 255, 255, 0.68); }
+.ob-center { text-align: center; }
+
+/* CTAs. */
+.ob-cta { margin-top: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.ob-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  height: 56px; border: 0; border-radius: 16px; width: 100%;
+  font: 700 1.05rem var(--font-body); cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease;
+}
+.ob-btn:active { transform: scale(0.98); }
+.ob-btn-primary { background: linear-gradient(180deg, #3de77f, #1fb257); color: #052311; box-shadow: 0 14px 30px -12px rgba(34, 197, 94, 0.6); }
+.ob-btn-ghost { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.18); }
+.ob-link { background: none; border: 0; color: rgba(255, 255, 255, 0.85); font: 600 0.98rem var(--font-body); cursor: pointer; padding: 0.5rem; }
+
+/* Shared art container for feature slides. */
+.ob-art { flex: 1; display: flex; flex-direction: column; gap: 0.85rem; justify-content: center; min-height: 0; padding: 0.5rem 0; }
+.ob-card { background: rgba(20, 24, 28, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; padding: 1rem; }
+.ob-row-between { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.ob-muted { color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; }
+
+/* Slide 2: log it. */
+.ob-input-card { display: flex; flex-direction: column; gap: 0.6rem; }
+.ob-smart { color: #6ee7b7; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; }
+.ob-input { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 0.9rem; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1.5px solid #22c55e; font-size: 1.05rem; font-weight: 600; }
+.ob-looks { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.7rem; border-radius: 10px; background: rgba(255, 255, 255, 0.06); font-size: 0.88rem; }
+.ob-looks b { color: #6ee7b7; margin-left: 0.2rem; }
+.ob-saved { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; border-radius: 16px; background: linear-gradient(120deg, #1a7f4b, #22c55e); }
+.ob-saved-ic { width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.18); display: grid; place-items: center; font-size: 1.3rem; flex: none; }
+.ob-saved-t { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.ob-saved-t em { font-style: normal; font-size: 0.82rem; color: rgba(255, 255, 255, 0.82); }
+.ob-saved-amt { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.ob-saved-amt b { font-size: 1.25rem; } .ob-saved-amt i { font-style: normal; font-size: 0.8rem; opacity: 0.85; }
+.ob-saved-tag { margin-top: 0.15rem; background: #fff; color: #15803d; font-size: 0.72rem; font-weight: 800; padding: 0.1rem 0.5rem; border-radius: 99px; }
+.ob-receipt-row { display: flex; gap: 0.7rem; }
+.ob-receipt { flex: 0 0 46%; background: #f3f3ee; color: #1a1a1a; border-radius: 10px; padding: 0.7rem 0.75rem; font-family: ui-monospace, 'Courier New', monospace; font-size: 0.72rem; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.6); }
+.ob-r-head { text-align: center; font-weight: 700; border-bottom: 1px dashed #bbb; padding-bottom: 0.3rem; }
+.ob-r-date { text-align: center; color: #666; font-size: 0.66rem; margin-bottom: 0.4rem; }
+.ob-r-line, .ob-r-total { display: flex; justify-content: space-between; }
+.ob-r-total { border-top: 1px dashed #bbb; margin-top: 0.3rem; padding-top: 0.3rem; font-weight: 700; }
+.ob-r-cards { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; justify-content: center; }
+.ob-r-card { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 0.5rem 0.7rem; display: flex; flex-direction: column; }
+.ob-r-card b { font-size: 0.95rem; }
+
+/* Slide 3: budget. */
+.ob-budget { display: flex; flex-direction: column; gap: 0.9rem; }
+.ob-budget-head { display: flex; align-items: center; gap: 1rem; }
+.ob-ring58 { position: relative; width: 80px; height: 80px; flex: none; display: grid; place-items: center; }
+.ob-ring58 svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ob-ring58 span { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.ob-ring58 b { font-size: 1.1rem; } .ob-ring58 em { font-style: normal; font-size: 0.65rem; color: rgba(255, 255, 255, 0.55); }
+.ob-budget-fig { display: flex; flex-direction: column; gap: 0.25rem; }
+.ob-big { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; } .ob-big i { font-style: normal; font-size: 1rem; color: rgba(255, 255, 255, 0.6); margin-right: 0.2rem; }
+.ob-amber-pill { align-self: flex-start; background: #f0b429; color: #3a2a00; font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 99px; }
+.ob-bar { display: flex; flex-direction: column; gap: 0.4rem; }
+.ob-bar b { font-size: 0.95rem; }
+.ob-bartrack { height: 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.ob-bartrack span { display: block; height: 100%; border-radius: 99px; }
+.ob-week { display: flex; flex-direction: column; gap: 0.6rem; }
+.ob-spark { width: 100%; height: 80px; display: block; }
+
+/* Slide 4: Coin chat. */
+.ob-coin-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.3rem; }
+.ob-coin-av { filter: drop-shadow(0 6px 14px rgba(34, 197, 94, 0.5)); flex: none; }
+.ob-coin-head b { font-size: 1.05rem; } .ob-coin-head em { font-style: normal; font-size: 0.82rem; color: rgba(255, 255, 255, 0.6); display: flex; align-items: center; gap: 0.35rem; }
+.ob-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+.ob-q { align-self: flex-end; max-width: 85%; margin-left: auto; background: #22c55e; color: #052311; font-weight: 600; padding: 0.7rem 1rem; border-radius: 16px 16px 4px 16px; }
+.ob-a { max-width: 92%; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.85rem 1rem; border-radius: 16px 16px 16px 4px; line-height: 1.45; font-size: 0.95rem; }
+.ob-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.ob-tile { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 0.6rem 0.65rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.ob-tile b { font-size: 1.05rem; } .ob-tile i { font-style: normal; font-size: 0.72rem; color: rgba(255, 255, 255, 0.6); margin-right: 0.15rem; }
+.ob-tile b.g { color: #3ddc84; }
+.ob-lock { display: flex; align-items: center; gap: 0.4rem; color: rgba(255, 255, 255, 0.5); font-size: 0.82rem; margin: 0.2rem 0 0; }
+
+/* Slide 5: join. */
+.ob-join { justify-content: center; text-align: center; }
+.ob-join-h { text-align: center; }
+.ob-join-cta { margin-top: 1.5rem; }
+.ob-google { display: flex; justify-content: center; min-width: 0; }
+.ob-google .google-signin-card { width: 100%; display: flex; justify-content: center; padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
+.ob-google .google-signin { display: flex; justify-content: center; }
+.ob-google iframe { margin: 0 auto !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-track, .ob-coin3d, .ob-chip { transition: none; animation: none; }
+}
+
+/* ------------------------------------------------------------------------- *
+ *  Phone-OTP screen (pages/Phone.jsx) - same dark, green-forward language.
+ * ------------------------------------------------------------------------- */
+.wel {
+  position: fixed; inset: 0; overflow: hidden; display: flex; justify-content: center;
+  color: #fff; font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  background: radial-gradient(90% 55% at 15% 0%, rgba(34, 197, 94, 0.22), transparent 60%), #0a0c0e;
+}
+.wel, .wel * { box-sizing: border-box; }
+.wel-plain { }
+.wel-inner { position: relative; z-index: 2; width: 100%; max-width: 440px; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.25rem 1.5rem; }
+.wel-back { display: inline-flex; align-items: center; gap: 0.3rem; color: rgba(255, 255, 255, 0.8); text-decoration: none; font-weight: 600; margin-bottom: 1.75rem; }
+.wel-brand { display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+.wel-brand .wordmark, .wel-brand .wordmark b { color: #fff; font-weight: 700; font-size: 1.4rem; }
+.wel-actions { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; }
 .wel-actions > * { min-width: 0; max-width: 100%; }
-@keyframes wel-rise { from { opacity: 0; transform: translateY(16px); } }
-
-.wel-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  height: 54px;
-  border: 0;
-  border-radius: 14px;
-  font: 600 1rem var(--font-body, system-ui);
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-.wel-btn:active { transform: scale(0.98); }
-.wel-btn-primary { background: #22c55e; color: #06220f; }
-.wel-btn-ghost { background: rgba(255, 255, 255, 0.12); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.22); }
-
-/* Google draws its own fixed-width (320px) button. Strip the app's card chrome
-   around it and centre it; min-width:0 lets the flex column shrink on narrow
-   phones instead of the fixed iframe forcing the whole column wider than the screen. */
-.wel-google { display: flex; justify-content: center; min-width: 0; }
-.wel-google .google-signin-card {
-  width: 100%; display: flex; justify-content: center;
-  padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important;
-}
-.wel-google .google-signin { display: flex; justify-content: center; }
-.wel-google iframe { margin: 0 auto !important; }
-
-.wel-login { margin: 0.5rem 0 0; text-align: center; font-size: 0.95rem; color: rgba(255, 255, 255, 0.82); }
-.wel-login a { color: #6ee7b7; font-weight: 700; text-decoration: none; }
-.wel-fine { margin: 0.4rem 0 0; text-align: center; font-size: 0.78rem; color: rgba(255, 255, 255, 0.55); }
-.wel-fine a { color: rgba(255, 255, 255, 0.8); }
-
-/* The phone-OTP screen reuses the shell without the video. */
-.wel-plain { background: radial-gradient(120% 90% at 50% 0%, #15301f 0%, #0b0d10 60%); }
-.wel-inner-top { justify-content: flex-start; padding-top: calc(1.5rem + env(safe-area-inset-top, 0px)); }
-.wel-back {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  color: rgba(255, 255, 255, 0.8); text-decoration: none; font-weight: 600;
-  margin-bottom: 1.75rem;
-}
 .wel-h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.02em; }
 .wel-sub { margin: 0.4rem 0 0.4rem; color: rgba(255, 255, 255, 0.7); font-size: 0.98rem; }
-.wel-input {
-  height: 54px;
-  padding: 0 1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font: 500 1.05rem var(--font-body, system-ui);
-}
+.wel-input { height: 54px; padding: 0 1rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.08); color: #fff; font: 500 1.05rem var(--font-body); }
 .wel-input::placeholder { color: rgba(255, 255, 255, 0.45); }
 .wel-input:focus { outline: none; border-color: #22c55e; background: rgba(255, 255, 255, 0.12); }
 .wel-input-code { text-align: center; letter-spacing: 0.5em; font-size: 1.4rem; font-weight: 700; }
-.wel-error {
-  padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500;
-  background: rgba(239, 68, 68, 0.18); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.35);
-}
-.wel-note {
-  padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
-  background: rgba(34, 197, 94, 0.16); color: #bbf7d0; border: 1px solid rgba(34, 197, 94, 0.35);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .wel-actions { animation: none; }
-}
+.wel-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 54px; border: 0; border-radius: 14px; font: 700 1rem var(--font-body); cursor: pointer; width: 100%; }
+.wel-btn-primary { background: linear-gradient(180deg, #3de77f, #1fb257); color: #052311; }
+.wel-btn-ghost { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+.wel-error { padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.9rem; font-weight: 500; background: rgba(239, 68, 68, 0.18); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.35); }
+.wel-note { padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.9rem; font-weight: 600; background: rgba(34, 197, 94, 0.16); color: #bbf7d0; border: 1px solid rgba(34, 197, 94, 0.35); }
