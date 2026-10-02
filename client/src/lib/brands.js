@@ -60,6 +60,32 @@ const BRANDS = [
   { match: /easy ?paisa/i, name: 'Easypaisa', hex: '3BB54A', letter: 'e' },
   { match: /sada ?pay/i, name: 'SadaPay', hex: '00D9A6', letter: 'S', dark: true },
   { match: /naya ?pay/i, name: 'NayaPay', hex: '6C2BD9', letter: 'N' },
+  { match: /zindigi/i, name: 'Zindigi', hex: '00E0B8', letter: 'Z', dark: true },
+  { match: /\bu-?paisa\b/i, name: 'UPaisa', hex: 'F58220', letter: 'Up' },
+  { match: /konnect/i, name: 'Konnect', hex: '00984A', letter: 'K' },
+
+  /* The banks a student is most likely to type - a tile in the bank's own
+     colour with its short name, the same brand-mark style the wallets above
+     use. These are coloured initials, not a reproduction of any bank's
+     actual logo. Specific names, so the order among them does not matter. */
+  { match: /\bhbl\b|habib bank/i, name: 'HBL', hex: '00984A', letter: 'HBL' },
+  { match: /\bubl\b|united bank/i, name: 'UBL', hex: '005DA4', letter: 'UBL' },
+  { match: /\bmcb\b|muslim commercial/i, name: 'MCB', hex: '00954C', letter: 'MCB' },
+  { match: /meezan/i, name: 'Meezan Bank', hex: '005B41', letter: 'MB' },
+  { match: /allied bank|\babl\b/i, name: 'Allied Bank', hex: '00A79D', letter: 'ABL' },
+  { match: /alfalah/i, name: 'Bank Alfalah', hex: 'D6002A', letter: 'BAF' },
+  { match: /faysal/i, name: 'Faysal Bank', hex: '006B3F', letter: 'FB' },
+  { match: /askari/i, name: 'Askari Bank', hex: '005DAA', letter: 'AKBL' },
+  { match: /standard chartered|\bscb\b/i, name: 'Standard Chartered', hex: '0473EA', letter: 'SC' },
+  { match: /bank ?islami/i, name: 'BankIslami', hex: '00953B', letter: 'BI' },
+  { match: /dubai islamic|\bdib\b/i, name: 'Dubai Islamic', hex: '00843D', letter: 'DIB' },
+  { match: /soneri/i, name: 'Soneri Bank', hex: 'E2001A', letter: 'SB' },
+  { match: /\bjs bank\b/i, name: 'JS Bank', hex: '00A94F', letter: 'JS' },
+  { match: /habib ?metro|metropolitan/i, name: 'Habib Metro', hex: '003DA5', letter: 'HM' },
+  { match: /national bank|\bnbp\b/i, name: 'National Bank', hex: '00843D', letter: 'NBP' },
+  { match: /bank of punjab|\bbop\b/i, name: 'Bank of Punjab', hex: '00A651', letter: 'BOP' },
+  { match: /\bsindh bank\b/i, name: 'Sindh Bank', hex: '00573F', letter: 'SNB' },
+  { match: /silk ?bank/i, name: 'Silkbank', hex: '662D91', letter: 'SILK' },
   { match: /cheezious/i, name: 'Cheezious', hex: 'FFC20E', letter: 'C', dark: true },
   { match: /savour/i, name: 'Savour Foods', hex: 'D71920', letter: 'S' },
   { match: /pizza ?hut/i, name: 'Pizza Hut', hex: 'EE3124', letter: 'PH' },
