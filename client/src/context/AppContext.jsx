@@ -188,10 +188,20 @@ export function AuthProvider({ children }) {
       currency: user?.currency || 'PKR',
       async login(email, password, { admin = false } = {}) {
         const data = await api.post(admin ? '/auth/admin/login' : '/auth/login', { email, password });
+        // The password was right, but this account also wants a code from
+        // its inbox - no token yet, the caller (Login.jsx) asks for it next.
+        if (data.twoFactorRequired) return { twoFactorRequired: true, userId: data.userId };
         setToken(data.token);
         adopt(data.user);
         // The next page shows a short welcome (components/WelcomeBack.jsx).
         if (!admin) greetNext({ kind: 'back', since: data.previousLoginAt });
+        return data.user;
+      },
+      async verifyTwoFactor(userId, code) {
+        const data = await api.post('/auth/login/verify-2fa', { userId, code });
+        setToken(data.token);
+        adopt(data.user);
+        greetNext({ kind: 'back' });
         return data.user;
       },
       async register(payload) {

@@ -164,6 +164,18 @@ function dailyPace({ totals, goal, month }) {
 /** Percentage change from last month, or null when there is nothing to compare. */
 const change = (now, before) => (before ? Math.round(((now - before) / Math.abs(before)) * 100) : null);
 
+/** The line under each Budget vs. actual bar - encouraging, not just a figure. */
+function bvaNote(b, currency) {
+  if (b.spent > b.limitAmount) {
+    return `${money(b.spent - b.limitAmount, currency)} over - trim this one for the rest of the month`;
+  }
+  const share = b.limitAmount > 0 ? (b.limitAmount - b.spent) / b.limitAmount : 1;
+  const left = money(b.limitAmount - b.spent, currency);
+  if (share >= 0.5) return `${left} left - well in hand`;
+  if (share > 0.15) return `${left} left - on track`;
+  return `${left} left - almost there, nice control`;
+}
+
 /** A black pill with the change in it: "+22%". */
 function Chip({ pct }) {
   if (pct === null) return <span className="d9-chip">new</span>;
@@ -573,11 +585,7 @@ export default function Dashboard() {
                         <span className={`d9-bva-track ${tone}`} aria-label={`${b.pct}% of the budget used`}>
                           <i style={{ width: `${Math.min(100, b.pct)}%` }} />
                         </span>
-                        <small className="d9-bva-note">
-                          {b.spent > b.limitAmount
-                            ? `${money(b.spent - b.limitAmount, currency)} over the budget`
-                            : `${money(b.limitAmount - b.spent, currency)} left · ${b.pct}% used`}
-                        </small>
+                        <small className="d9-bva-note">{bvaNote(b, currency)}</small>
                       </span>
                     </li>
                   );

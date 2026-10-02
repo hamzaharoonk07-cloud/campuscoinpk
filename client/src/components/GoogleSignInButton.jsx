@@ -80,7 +80,9 @@ export default function GoogleSignInButton() {
       <div className="auth-or">
         <span>or</span>
       </div>
-      <div className="google-signin" ref={ref} />
+      <div className="google-signin-card">
+        <div className="google-signin" ref={ref} />
+      </div>
     </>
   );
 }

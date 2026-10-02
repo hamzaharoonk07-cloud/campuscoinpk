@@ -1325,6 +1325,14 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
 }
 
+/* A one-column variant for a lone form with no navy aside next to it, e.g.
+   RequirePhone - the two-column grid above would otherwise leave an empty
+   track where the aside should be. */
+.auth-solo {
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+}
+
 /* --- The navy half -------------------------------------------------------- */
 
 .auth-aside {
@@ -1569,6 +1577,15 @@ table.data tbody tr:last-child td { border-bottom: 0; }
    sitting above nothing. */
 .auth-or { display: flex; align-items: center; gap: 0.75rem; margin: 0.4rem 0; color: var(--muted); font-size: var(--step--1); }
 .auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
+.google-signin-card {
+  display: flex;
+  justify-content: center;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.google-signin-card:has(.google-signin:empty) { display: none; }
 .google-signin { display: flex; justify-content: center; }
 .google-signin:empty { display: none; }
 

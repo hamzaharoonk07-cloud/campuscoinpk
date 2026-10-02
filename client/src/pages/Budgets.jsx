@@ -9,6 +9,18 @@ import { api } from '../lib/api.js';
 import { money, monthKey, shiftMonth, slotColor } from '../lib/format.js';
 import { useAuth, useToast } from '../context/AppContext.jsx';
 
+/** The line under each budget's progress bar - encouraging where the plain
+ * figure alone reads as cold, not just "Rs X left/over". */
+function budgetNote(budget, currency) {
+  if (budget.remaining < 0) {
+    return `${money(Math.abs(budget.remaining), currency)} over - pull back a little this week`;
+  }
+  const share = budget.limitAmount > 0 ? budget.remaining / budget.limitAmount : 1;
+  if (share >= 0.5) return `${money(budget.remaining, currency)} left - plenty of room`;
+  if (share > 0.15) return `${money(budget.remaining, currency)} left - good pace`;
+  return `${money(budget.remaining, currency)} left - almost there, ease off a bit`;
+}
+
 export default function Budgets() {
   const { currency } = useAuth();
   const toast = useToast();
@@ -139,11 +151,7 @@ export default function Budgets() {
                   <div key={budget._id}>
                     <BudgetMeter budget={budget} currency={currency} />
                     <div className="row" style={{ marginTop: '-0.35rem' }}>
-                      <span className="small muted">
-                        {budget.remaining >= 0
-                          ? `${money(budget.remaining, currency)} left`
-                          : `${money(Math.abs(budget.remaining), currency)} over`}
-                      </span>
+                      <span className="small muted">{budgetNote(budget, currency)}</span>
                       <button type="button" className="btn btn-ghost btn-sm push" onClick={() => remove(budget)}>
                         Remove
                       </button>

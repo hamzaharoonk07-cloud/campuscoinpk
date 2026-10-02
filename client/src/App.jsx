@@ -18,7 +18,6 @@ import Calendar from './pages/Calendar.jsx';
 import Tips from './pages/Tips.jsx';
 import Categories from './pages/Categories.jsx';
 import Settings from './pages/Settings.jsx';
-import Sitemap from './pages/Sitemap.jsx';
 
 import AdminLogin from './pages/admin/AdminLogin.jsx';
 import AdminOverview from './pages/admin/AdminOverview.jsx';
@@ -26,6 +25,7 @@ import AdminStudents from './pages/admin/AdminStudents.jsx';
 import AdminCategories from './pages/admin/AdminCategories.jsx';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements.jsx';
 import Loader from './components/Loader.jsx';
+import RequireProfile from './components/RequireProfile.jsx';
 
 /** While the saved sign-in is checked: the branded loader (components/Loader.jsx). */
 const Loading = () => <Loader />;
@@ -40,6 +40,10 @@ function Protected({ children, admin = false }) {
   if (admin && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   // An administrator has no student dashboard, so send them where they belong.
   if (!admin && user.role === 'admin') return <Navigate to="/admin" replace />;
+  // Every account needs a contact number on file, and a Google sign-up still
+  // needs the rest of the usual signup form filled in once. Blocks the page,
+  // not just a banner on it, until saved.
+  if (!admin && (!user.phone || !user.profileComplete)) return <RequireProfile />;
 
   return children;
 }
@@ -73,7 +77,6 @@ export default function App() {
       <Route path="/tips" element={<Protected><Tips /></Protected>} />
       <Route path="/categories" element={<Protected><Categories /></Protected>} />
       <Route path="/settings" element={<Protected><Settings /></Protected>} />
-      <Route path="/sitemap" element={<Protected><Sitemap /></Protected>} />
 
       <Route path="/admin" element={<Protected admin><AdminOverview /></Protected>} />
       <Route path="/admin/students" element={<Protected admin><AdminStudents /></Protected>} />

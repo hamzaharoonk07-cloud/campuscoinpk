@@ -27,7 +27,6 @@ const STUDENT_NAV = [
 
 const SECONDARY_NAV = [
   { to: '/settings', label: 'Settings', icon: 'sliders', art: 'gear', about: 'Profile, photo and display' },
-  { to: '/sitemap', label: 'Sitemap', icon: 'map', art: 'world_map', about: 'Every page in Campus Coin' },
 ];
 
 const ADMIN_NAV = [

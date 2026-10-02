@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
     // Google" - Google's own stable per-account identifier, separate from
     // email (which a student could change on Google's side).
     googleId: { type: String, index: true, sparse: true, unique: true },
+    // A Google sign-up skips the usual registration form (year, institution,
+    // allowance, goal), so it is created with this false; RequireProfile on
+    // the client blocks the app until those are filled in once, the same way
+    // the ordinary signup form already asks for them up front.
+    profileComplete: { type: Boolean, default: true },
 
     // Profile fields from the SRS (section 1.6, "User Authentication and Management")
     // School, college, university or postgraduate year (utils/study.js).
@@ -32,6 +37,11 @@ const userSchema = new mongoose.Schema(
     savingsGoal: { type: Number, default: 0, min: 0 },
     currency: { type: String, enum: ['PKR', 'USD', 'EUR', 'GBP', 'INR', 'AED'], default: 'PKR' },
     avatarColor: { type: String, default: '#121214' },
+    // The student's own contact number, required of every account (even one
+    // created before this was added, and even a Google sign-in, which gives
+    // no phone number of its own) - the app gates on this being empty rather
+    // than trusting signup alone, since old accounts predate the field.
+    phone: { type: String, trim: true, maxlength: 20, default: '' },
     // An optional profile photo as a small data URL (see utils/images.js).
     // The coloured initial is shown whenever this is empty.
     avatar: { type: String, default: '' },
@@ -50,6 +60,15 @@ const userSchema = new mongoose.Schema(
     // Password reset: only the hash of the token is stored, never the token itself.
     resetTokenHash: { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },
+
+    // Two-step verification (opt-in, Settings > Security): a 6-digit code
+    // emailed at login, after the password already checked out. Same
+    // hash-only pattern as the reset token above - only its hash is stored,
+    // and it is also reused (with the same two fields) while a student is
+    // turning the feature on, to prove they can actually read that inbox.
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorCodeHash: { type: String, select: false },
+    twoFactorCodeExpires: { type: Date, select: false },
 
     // Webhook automation (SRS brief, "Automation app + webhook"): a long-lived
     // key a phone-side forwarder (MacroDroit, Tasker, iOS Shortcuts) sends with

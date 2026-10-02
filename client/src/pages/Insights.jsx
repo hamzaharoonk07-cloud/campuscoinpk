@@ -312,6 +312,8 @@ export default function Insights() {
             </section>
 
             <div className="in-side">
+              <ZakatCalculator />
+
               <section className="in-card">
                 <div className="in-head">
                   <h3>Your spending week</h3>
@@ -375,8 +377,6 @@ export default function Insights() {
               </section>
 
               <PersonalityCard details={details} month={monthLabel(month)} currency={currency} />
-
-              <ZakatCalculator />
             </div>
           </div>
 

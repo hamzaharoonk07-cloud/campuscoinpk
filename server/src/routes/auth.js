@@ -22,6 +22,9 @@ const publicUser = (user) => ({
   monthlyAllowance: user.monthlyAllowance,
   savingsGoal: user.savingsGoal,
   currency: user.currency,
+  phone: user.phone,
+  profileComplete: user.profileComplete,
+  twoFactorEnabled: user.twoFactorEnabled,
   avatarColor: user.avatarColor,
   avatar: user.avatar,
   preferences: user.preferences,
@@ -83,6 +86,43 @@ async function sendPasswordLink(user, { change = false } = {}) {
     }),
   });
   return { ...result, link };
+}
+
+/**
+ * Generates a 6-digit code, stores only its SHA-256 hash (expires in 10
+ * minutes) and emails it - shared by signing in with 2FA on and turning 2FA
+ * on in the first place, since both are really "prove you can read this
+ * inbox right now".
+ */
+async function sendTwoFactorCode(user, { verb = 'sign in' } = {}) {
+  const code = String(crypto.randomInt(100000, 1000000));
+  user.twoFactorCodeHash = crypto.createHash('sha256').update(code).digest('hex');
+  user.twoFactorCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save();
+
+  return sendMail({
+    to: user.email,
+    subject: `Your Campus Coin code is ${code}`,
+    ...emailLayout({
+      heading: 'Your verification code',
+      preheader: 'This code works once, for 10 minutes.',
+      paragraphs: [`Hi ${user.name.split(' ')[0]}, use this code to ${verb}:`],
+      stats: [{ label: 'Code', value: code }],
+      note: 'The code expires in 10 minutes. If you did not ask for this, ignore this email.',
+    }),
+  });
+}
+
+/** Checks a submitted code against the stored hash, clearing it either way. */
+function checkTwoFactorCode(user, code) {
+  const valid =
+    user.twoFactorCodeHash &&
+    user.twoFactorCodeExpires &&
+    user.twoFactorCodeExpires > new Date() &&
+    user.twoFactorCodeHash === crypto.createHash('sha256').update(String(code || '')).digest('hex');
+  user.twoFactorCodeHash = undefined;
+  user.twoFactorCodeExpires = undefined;
+  return valid;
 }
 
 router.post(
@@ -178,6 +218,7 @@ router.post(
           googleId: payload.sub,
           avatarColor: PALETTE[Math.floor(Math.random() * PALETTE.length)],
           role: 'student',
+          profileComplete: false,
         });
       }
       await user.save();
@@ -240,7 +281,30 @@ router.post(
   '/login',
   wrap(async (req, res) => {
     const user = await checkSignIn(req, res);
-    if (user) res.json({ token: signToken(user), user: publicUser(user), previousLoginAt: user.$locals.previousLoginAt });
+    if (!user) return;
+    // The password was already right - two-step verification is a second,
+    // separate proof (the inbox), not a replacement for it.
+    if (user.twoFactorEnabled) {
+      await sendTwoFactorCode(user, { verb: 'finish signing in' });
+      return res.json({ twoFactorRequired: true, userId: user._id });
+    }
+    res.json({ token: signToken(user), user: publicUser(user), previousLoginAt: user.$locals.previousLoginAt });
+  })
+);
+
+/** The second step of signing in when two-step verification is on. */
+router.post(
+  '/login/verify-2fa',
+  wrap(async (req, res) => {
+    const { userId, code } = req.body;
+    const user = await User.findById(userId).select('+twoFactorCodeHash +twoFactorCodeExpires');
+    if (!user || !checkTwoFactorCode(user, code)) {
+      if (user) await user.save();
+      return res.status(401).json({ message: 'That code is wrong or has expired' });
+    }
+    user.lastLoginAt = new Date();
+    await user.save();
+    res.json({ token: signToken(user), user: publicUser(user) });
   })
 );
 
@@ -263,7 +327,7 @@ router.patch(
   '/me',
   protect,
   wrap(async (req, res) => {
-    const fields = ['name', 'academicYear', 'institution', 'monthlyAllowance', 'savingsGoal', 'currency', 'avatarColor'];
+    const fields = ['name', 'academicYear', 'institution', 'monthlyAllowance', 'savingsGoal', 'currency', 'avatarColor', 'phone', 'profileComplete'];
     for (const field of fields) {
       if (req.body[field] !== undefined) req.user[field] = req.body[field];
     }
@@ -274,6 +338,44 @@ router.patch(
     if (req.body.avatar !== undefined) {
       req.user.avatar = cleanImage(req.body.avatar, { maxKb: 150, label: 'Profile photo' });
     }
+    await req.user.save();
+    res.json({ user: publicUser(req.user) });
+  })
+);
+
+/** Starts turning two-step verification on: sends a code to prove the inbox is real. */
+router.post(
+  '/2fa/enable',
+  protect,
+  wrap(async (req, res) => {
+    if (req.user.twoFactorEnabled) return res.json({ sent: false });
+    await sendTwoFactorCode(req.user, { verb: 'turn on two-step verification' });
+    res.json({ sent: true });
+  })
+);
+
+/** Finishes turning it on, once the emailed code checks out. */
+router.post(
+  '/2fa/confirm',
+  protect,
+  wrap(async (req, res) => {
+    const user = await User.findById(req.user._id).select('+twoFactorCodeHash +twoFactorCodeExpires');
+    if (!checkTwoFactorCode(user, req.body.code)) {
+      await user.save();
+      return res.status(401).json({ message: 'That code is wrong or has expired' });
+    }
+    user.twoFactorEnabled = true;
+    await user.save();
+    res.json({ user: publicUser(user) });
+  })
+);
+
+/** Turns two-step verification back off - the password alone is enough to do this. */
+router.post(
+  '/2fa/disable',
+  protect,
+  wrap(async (req, res) => {
+    req.user.twoFactorEnabled = false;
     await req.user.save();
     res.json({ user: publicUser(req.user) });
   })

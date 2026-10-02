@@ -4,7 +4,7 @@ import Icon from '../../components/Icon.jsx';
 import { Modal } from '../../components/TransactionForm.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import { api } from '../../lib/api.js';
-import { formatDate } from '../../lib/format.js';
+import { formatDate, money } from '../../lib/format.js';
 import { useToast } from '../../context/AppContext.jsx';
 import { studyLabel } from '../../lib/study.jsx';
 
@@ -13,6 +13,8 @@ export default function AdminStudents() {
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState([]);
   const [issued, setIssued] = useState(null);
+  const [detail, setDetail] = useState(null); // the full response from GET /admin/users/:id
+  const [detailBusy, setDetailBusy] = useState(false);
 
   const load = useCallback(() => {
     api
@@ -43,6 +45,18 @@ export default function AdminStudents() {
       setIssued({ user, ...data });
     } catch (err) {
       toast.error('Could not reset it', err.message);
+    }
+  };
+
+  const view = async (user) => {
+    setDetailBusy(true);
+    try {
+      const data = await api.get(`/admin/users/${user._id}`);
+      setDetail(data);
+    } catch (err) {
+      toast.error('Could not load that account', err.message);
+    } finally {
+      setDetailBusy(false);
     }
   };
 
@@ -110,6 +124,10 @@ export default function AdminStudents() {
                   </td>
                   <td>
                     <div className="row">
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => view(user)} disabled={detailBusy}>
+                        <Icon name="eye" size={14} />
+                        View
+                      </button>
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggle(user)}>
                         {user.disabled ? 'Enable' : 'Disable'}
                       </button>
@@ -161,6 +179,87 @@ export default function AdminStudents() {
               >
                 Copy and close
               </button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+
+      {detail ? (
+        <Modal title={detail.user.name} onClose={() => setDetail(null)}>
+          <div className="stack">
+            <div className="field-row">
+              <div className="field">
+                <label>Email</label>
+                <div>{detail.user.email}</div>
+              </div>
+              <div className="field">
+                <label>Phone</label>
+                <div>{detail.user.phone || '--'}</div>
+              </div>
+            </div>
+            <div className="field-row">
+              <div className="field">
+                <label>Where they study</label>
+                <div>{studyLabel(detail.user.academicYear) || '--'}{detail.user.institution ? ` · ${detail.user.institution}` : ''}</div>
+              </div>
+              <div className="field">
+                <label>Security</label>
+                <div>
+                  {detail.user.twoFactorEnabled ? 'Two-step on' : 'Two-step off'}
+                  {detail.user.googleId ? ' · Google-linked' : ''}
+                </div>
+              </div>
+            </div>
+
+            <div className="row row-wrap" style={{ gap: '0.5rem' }}>
+              <span className="pill">{detail.totals.transactionCount} transactions</span>
+              <span className="pill is-good">In: {money(detail.totals.income, detail.user.currency)}</span>
+              <span className="pill is-bad">Out: {money(detail.totals.expense, detail.user.currency)}</span>
+              <span className="pill">{detail.budgets.length} budgets</span>
+              <span className="pill">{detail.udhaarOpen} open udhaar</span>
+              <span className="pill">{detail.committees} committees</span>
+              <span className="pill">{detail.ownCategoryCount} own categories</span>
+            </div>
+
+            {detail.udhaarOpen ? (
+              <p className="small muted">
+                Owed to them: {money(detail.udhaarOwedToThem, detail.user.currency)} · They owe:{' '}
+                {money(detail.udhaarTheyOwe, detail.user.currency)}
+              </p>
+            ) : null}
+
+            <h3 style={{ margin: '0.5rem 0 0' }}>Recent transactions</h3>
+            <div className="table-wrap">
+              <table className="data">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th className="right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detail.recentTransactions.map((t) => (
+                    <tr key={t._id}>
+                      <td>{formatDate(t.date)}</td>
+                      <td>{t.category?.name || '--'}</td>
+                      <td>{t.description || '--'}</td>
+                      <td className={`right num ${t.type === 'income' ? 'is-good' : ''}`}>
+                        {t.type === 'income' ? '+' : '-'}
+                        {money(t.amount, detail.user.currency)}
+                      </td>
+                    </tr>
+                  ))}
+                  {detail.recentTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="muted">
+                        No transactions yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
             </div>
           </div>
         </Modal>

@@ -80,6 +80,24 @@ function WebhookKey() {
 
   return (
     <div className="webhook-key">
+      <p className="security-note" style={{ marginBottom: '1rem' }}>
+        <Icon name="bell" size={16} />
+        What this does: when a bank SMS arrives on your phone, it gets logged here automatically, with no app to
+        open. Campus Coin itself cannot read your SMS (no website can) - a small automation app on your phone has to
+        forward the message here. MacroDroid is the easiest free one. Steps: 1) install MacroDroid, 2) make a rule
+        "When SMS received → HTTP Request", 3) paste the URL and key below into it.
+      </p>
+      <a
+        className="btn btn-sm"
+        href="https://play.google.com/store/apps/details?id=com.arlosoft.macrodroid"
+        target="_blank"
+        rel="noreferrer"
+        style={{ marginBottom: '1rem', display: 'inline-flex' }}
+      >
+        <Icon name="download" size={14} />
+        Get MacroDroid
+      </a>
+
       <div className="webhook-field">
         <label>Which SIM or bank is this for?</label>
         <div className="webhook-copy-row">
@@ -138,6 +156,111 @@ function WebhookKey() {
   );
 }
 
+/**
+ * Two-step verification: off by default, and turning it on needs a code
+ * from the inbox first - the same "prove you can read this inbox right
+ * now" check used at sign-in, just done once up front instead.
+ */
+function TwoFactorToggle() {
+  const { user, setUser } = useAuth();
+  const toast = useToast();
+  const [stage, setStage] = useState('idle'); // idle | code | busy
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+
+  const startEnable = async () => {
+    setStage('busy');
+    setError('');
+    try {
+      await api.post('/auth/2fa/enable');
+      setStage('code');
+      toast.success('Code sent', `Check ${user.email}.`);
+    } catch (err) {
+      setStage('idle');
+      toast.error('Could not send a code', err.message);
+    }
+  };
+
+  const confirm = async (event) => {
+    event.preventDefault();
+    setStage('busy');
+    setError('');
+    try {
+      const { user: updated } = await api.post('/auth/2fa/confirm', { code: code.trim() });
+      setUser(updated);
+      setStage('idle');
+      setCode('');
+      toast.success('Two-step verification is on');
+    } catch (err) {
+      setStage('code');
+      setError(err.message);
+    }
+  };
+
+  const disable = async () => {
+    setStage('busy');
+    try {
+      const { user: updated } = await api.post('/auth/2fa/disable');
+      setUser(updated);
+      toast.success('Two-step verification is off');
+    } catch (err) {
+      toast.error('Could not turn it off', err.message);
+    } finally {
+      setStage('idle');
+    }
+  };
+
+  if (user.twoFactorEnabled) {
+    return (
+      <div className="security-row">
+        <span>
+          <strong>Two-step verification is on</strong>
+          <small>A code is emailed to {user.email} each time you sign in with your password.</small>
+        </span>
+        <button type="button" className="btn btn-sm" onClick={disable} disabled={stage === 'busy'}>
+          Turn off
+        </button>
+      </div>
+    );
+  }
+
+  if (stage === 'code') {
+    return (
+      <form className="security-row" onSubmit={confirm} style={{ alignItems: 'flex-end' }}>
+        <span style={{ flex: 1 }}>
+          <strong>Enter the code</strong>
+          <small>{error || `We emailed a 6-digit code to ${user.email}.`}</small>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="000000"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            style={{ marginTop: '0.5rem', maxWidth: '10rem' }}
+            required
+            autoFocus
+          />
+        </span>
+        <button type="submit" className="btn btn-primary btn-sm" disabled={stage === 'busy'}>
+          Confirm
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <div className="security-row">
+      <span>
+        <strong>Two-step verification</strong>
+        <small>Off - add a code emailed at sign-in, on top of your password.</small>
+      </span>
+      <button type="button" className="btn btn-sm" onClick={startEnable} disabled={user.isDemo || stage === 'busy'}>
+        Turn on
+      </button>
+    </div>
+  );
+}
+
 export default function Settings() {
   const { user, updateProfile } = useAuth();
   const { theme, setTheme, fontScale, setFontScale } = useTheme();
@@ -145,6 +268,7 @@ export default function Settings() {
 
   const [profile, setProfile] = useState({
     name: user.name,
+    phone: user.phone || '',
     academicYear: user.academicYear || '',
     institution: user.institution || '',
     monthlyAllowance: user.monthlyAllowance || 0,
@@ -367,6 +491,12 @@ export default function Settings() {
                 <input id="institution" value={profile.institution} onChange={set('institution')} />
               </div>
 
+              <div className="field">
+                <label htmlFor="phone">Phone number</label>
+                <input id="phone" type="tel" value={profile.phone} onChange={set('phone')} required />
+                <span className="small muted">Required on every account.</span>
+              </div>
+
               <div className="field-row">
                 <div className="field">
                   <label htmlFor="allowance">Monthly allowance</label>
@@ -502,6 +632,8 @@ export default function Settings() {
                 {pwLink === 'sending' ? 'Sending' : pwLink ? 'Send another link' : 'Email me a link'}
               </button>
 
+              <TwoFactorToggle />
+
               <div className="security-row">
                 <span>
                   <strong>Signed in somewhere else?</strong>
@@ -521,8 +653,8 @@ export default function Settings() {
 
           <section className="panel" id="webhook">
             <div className="panel-head">
-              <h2>Automatic SMS logging</h2>
-              <span className="panel-note">For MacroDroid, Tasker or iOS Shortcuts</span>
+              <h2>Log transactions from bank SMS automatically</h2>
+              <span className="panel-note">5-minute setup, once</span>
             </div>
             <div className="panel-body">
               <p className="security-note is-quiet" style={{ marginBottom: '1rem' }}>

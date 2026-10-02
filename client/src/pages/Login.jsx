@@ -185,18 +185,26 @@ export function IconField({ id, label, icon, type = 'text', aside, ...input }) {
 const DEMO = { email: 'student@campuscoin.app', password: 'Student@12345' };
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, verifyTwoFactor } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Set once the password checks out on an account with two-step
+  // verification on - swaps the form below for a single code field.
+  const [twoFactor, setTwoFactor] = useState(null); // { userId }
+  const [code, setCode] = useState('');
 
   const signIn = async (credentials) => {
     setBusy(true);
     setError('');
     try {
-      await login(credentials.email, credentials.password);
+      const result = await login(credentials.email, credentials.password);
+      if (result?.twoFactorRequired) {
+        setTwoFactor({ userId: result.userId });
+        return;
+      }
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -208,6 +216,20 @@ export default function Login() {
   const submit = (event) => {
     event.preventDefault();
     signIn(form);
+  };
+
+  const submitCode = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await verifyTwoFactor(twoFactor.userId, code.trim());
+      navigate(location.state?.from || '/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Fills the form first so the student sees what is being used, then signs in.
@@ -232,6 +254,37 @@ export default function Login() {
         {/* On a phone this wrapper becomes the sheet, so the fine print sits on
             it rather than stranded on the dark below a card that stops short. */}
         <div className="auth-sheet">
+        {twoFactor ? (
+          <form className="auth-form" onSubmit={submitCode}>
+            <div className="auth-head">
+              <h1>Enter your code</h1>
+              <p>We emailed a 6-digit code to {form.email}.</p>
+            </div>
+
+            {error ? <div className="form-error">{error}</div> : null}
+
+            <IconField
+              id="code"
+              label="Verification code"
+              icon="key"
+              inputMode="numeric"
+              placeholder="000000"
+              autoComplete="one-time-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+
+            <button className="btn btn-primary btn-block btn-lg" type="submit" disabled={busy}>
+              {busy ? <span className="spinner" /> : null}
+              {busy ? 'Checking' : 'Continue'}
+            </button>
+
+            <button type="button" className="btn btn-block" onClick={() => setTwoFactor(null)} disabled={busy}>
+              Back to sign in
+            </button>
+          </form>
+        ) : (
         <form className="auth-form has-feed" onSubmit={submit}>
           {/* The aside already carries the brand and the promise, so the card
               only has to ask for two things. */}
@@ -281,11 +334,12 @@ export default function Login() {
             Use the demo account
           </button>
         </form>
+        )}
 
-        <GoogleSignInButton />
+        {!twoFactor ? <GoogleSignInButton /> : null}
 
         {/* Fills what was empty dark ground above and below a card this short. */}
-        <AuthFeed />
+        {!twoFactor ? <AuthFeed /> : null}
 
         {/* Out of the card: neither is part of signing in. */}
         <p className="auth-fine">
