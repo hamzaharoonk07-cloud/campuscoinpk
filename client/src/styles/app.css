@@ -3152,3 +3152,140 @@ table.data tbody tr:last-child td { border-bottom: 0; }
   }
   .auth-activity-window { height: clamp(150px, 26vh, 190px); }
 }
+
+/* ---------------------------------------------------------------------------
+   Udhaar — who owes whom. Two summary tiles, an add form, and a card per
+   person with their running net and open entries.
+--------------------------------------------------------------------------- */
+.udhaar-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+.udhaar-tile {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card, 16px);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.udhaar-tile span { color: var(--muted); font-size: var(--step--1); }
+.udhaar-tile strong { font-size: var(--step-3); font-weight: 700; letter-spacing: -0.03em; }
+.udhaar-tile.is-in strong { color: var(--good); }
+.udhaar-tile.is-out strong { color: var(--bad); }
+.is-in { color: var(--good); }
+.is-out { color: var(--bad); }
+
+.udhaar-add-btn {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px dashed var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--r-control);
+  padding: 0.7rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.udhaar-add-btn:hover { border-color: var(--accent); }
+
+.udhaar-form {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card, 16px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.udhaar-dir { display: inline-flex; gap: 0.3rem; background: var(--accent-soft); border-radius: 999px; padding: 0.25rem; width: fit-content; }
+.udhaar-dir button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--step--1);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.udhaar-dir button.is-on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1, 0 1px 2px rgba(0,0,0,0.06)); }
+.udhaar-fields { display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.6rem; }
+.udhaar-fields input {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--r-control);
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+}
+.udhaar-fields input:focus { outline: none; border-color: var(--accent); }
+.udhaar-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+.udhaar-list { margin-top: 1.1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.udhaar-person {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card, 16px);
+  padding: 1rem 1.1rem;
+}
+.udhaar-person header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.udhaar-person header > div { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.udhaar-person strong { font-size: var(--step-1); font-weight: 700; }
+.udhaar-person header span { font-size: var(--step--1); font-weight: 600; }
+.udhaar-remind {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #25d366;
+  color: #04301a;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 700;
+  font-size: var(--step--1);
+  text-decoration: none;
+}
+.udhaar-remind:hover { filter: brightness(1.05); }
+
+.udhaar-entries { list-style: none; margin: 0.8rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.udhaar-entries li { display: flex; align-items: center; gap: 0.6rem; font-size: var(--step--1); }
+.udhaar-entries .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.udhaar-entries .dot.is-in { background: var(--good); }
+.udhaar-entries .dot.is-out { background: var(--bad); }
+.udhaar-entry-amt { font-weight: 700; min-width: 4.5rem; }
+.udhaar-entry-note { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.udhaar-entry-date { color: var(--muted); }
+.udhaar-mini {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: var(--r-control);
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+}
+.udhaar-mini:hover { color: var(--text); }
+.udhaar-mini.is-danger:hover { color: var(--bad); border-color: var(--bad); }
+
+.udhaar-empty {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+}
+.udhaar-empty p { max-width: 30ch; margin: 0; }
+
+@media (max-width: 640px) {
+  .udhaar-top { grid-template-columns: 1fr 1fr; }
+  .udhaar-top .udhaar-tile:last-child { grid-column: 1 / -1; }
+  .udhaar-fields { grid-template-columns: 1fr; }
+}
