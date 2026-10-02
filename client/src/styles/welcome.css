@@ -32,10 +32,11 @@
   z-index: 2;
   width: 100%;
   max-width: 440px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 2rem 1.5rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 2rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
   color: #fff;
 }
 .wel-brand { margin-bottom: 1.5rem; }
@@ -48,7 +49,8 @@
   color: rgba(255, 255, 255, 0.88);
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
 }
-.wel-actions { display: flex; flex-direction: column; gap: 0.7rem; animation: wel-rise 0.6s var(--ease-out, ease) 0.2s backwards; }
+.wel-actions { display: flex; flex-direction: column; gap: 0.7rem; min-width: 0; animation: wel-rise 0.6s var(--ease-out, ease) 0.2s backwards; }
+.wel-actions > * { min-width: 0; max-width: 100%; }
 @keyframes wel-rise { from { opacity: 0; transform: translateY(16px); } }
 
 .wel-btn {
@@ -67,10 +69,15 @@
 .wel-btn-primary { background: #22c55e; color: #06220f; }
 .wel-btn-ghost { background: rgba(255, 255, 255, 0.12); color: #fff; backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.22); }
 
-/* Google draws its own fixed-width button; centre it and let it size naturally. */
-.wel-google { display: flex; justify-content: center; }
-.wel-google .google-signin-card { width: 100%; display: flex; justify-content: center; }
-.wel-google .google-signin { width: 100% !important; }
+/* Google draws its own fixed-width (320px) button. Strip the app's card chrome
+   around it and centre it; min-width:0 lets the flex column shrink on narrow
+   phones instead of the fixed iframe forcing the whole column wider than the screen. */
+.wel-google { display: flex; justify-content: center; min-width: 0; }
+.wel-google .google-signin-card {
+  width: 100%; display: flex; justify-content: center;
+  padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important;
+}
+.wel-google .google-signin { display: flex; justify-content: center; }
 .wel-google iframe { margin: 0 auto !important; }
 
 .wel-login { margin: 0.5rem 0 0; text-align: center; font-size: 0.95rem; color: rgba(255, 255, 255, 0.82); }
