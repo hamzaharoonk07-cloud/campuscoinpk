@@ -54,48 +54,103 @@ function greetingFor(date = new Date()) {
  * morning, bright blue in the afternoon, deep navy in the evening and black
  * at night.
  */
-/* A hand-drawn area sparkline of the month's daily spending - no chart library,
-   so it stays explainable. currentColor lets it take the card's accent on every
-   time-of-day. Falls back to a soft glow when there's nothing to draw yet. */
-function GreetSpark({ daily }) {
-  const pts = (daily || []).map((d) => d.total || 0);
-  const drawable = pts.length >= 2 && pts.some((v) => v > 0);
-  if (!drawable) {
-    return (
-      <div className="d9-greet-art" aria-hidden="true">
-        <span className="d9-greet-glow" />
-      </div>
-    );
-  }
-  const W = 280;
-  const H = 104;
-  const pad = 6;
-  const max = Math.max(...pts, 1);
-  const step = W / (pts.length - 1);
-  const x = (i) => i * step;
-  const y = (v) => H - pad - (v / max) * (H - pad * 2);
-  const line = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-  const area = `${line} L${W} ${H} L0 ${H} Z`;
-  const last = pts.length - 1;
+/* A cinematic time-of-day scene, by the same `part` that sets the card's mood:
+   a sun rising at dawn, high and bright by afternoon, a deep low sun at dusk,
+   and a crescent moon over stars at night. Hand-drawn SVG, no art files, and the
+   slow motion (glow breathing, rays turning, stars twinkling) is in the CSS so
+   it can be stilled under prefers-reduced-motion. */
+function TimeScene({ part }) {
   return (
-    <div className="d9-spark" aria-hidden="true">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="d9-spark-svg">
+    <div className="d9-scene" aria-hidden="true">
+      <svg viewBox="0 0 220 150" className="d9-scene-svg" preserveAspectRatio="xMidYMid meet">
         <defs>
-          <linearGradient id="d9-spark-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="currentColor" stopOpacity="0.32" />
-            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
-          </linearGradient>
+          <radialGradient id="scene-sun-m" cx="50%" cy="45%" r="55%">
+            <stop offset="0" stopColor="#fff3cf" />
+            <stop offset="55%" stopColor="#ffc24d" />
+            <stop offset="100%" stopColor="#ff8a3d" />
+          </radialGradient>
+          <radialGradient id="scene-sun-a" cx="50%" cy="45%" r="55%">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="60%" stopColor="#fff0a8" />
+            <stop offset="100%" stopColor="#ffd34d" />
+          </radialGradient>
+          <radialGradient id="scene-sun-e" cx="50%" cy="45%" r="55%">
+            <stop offset="0" stopColor="#ffd9a0" />
+            <stop offset="50%" stopColor="#ff7e4d" />
+            <stop offset="100%" stopColor="#e0416b" />
+          </radialGradient>
+          <radialGradient id="scene-moon" cx="38%" cy="35%" r="70%">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#c7d4ff" />
+          </radialGradient>
+          <radialGradient id="scene-halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="currentColor" stopOpacity="0.75" />
+            <stop offset="45%" stopColor="currentColor" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+          </radialGradient>
+          <mask id="scene-crescent">
+            <rect width="220" height="150" fill="black" />
+            <circle cx="150" cy="52" r="30" fill="white" />
+            <circle cx="138" cy="44" r="27" fill="black" />
+          </mask>
         </defs>
-        <path d={area} fill="url(#d9-spark-fill)" />
-        <path d={line} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <circle cx={x(last)} cy={y(pts[last])} r="3.5" fill="currentColor" />
+
+        {part === 'morning' ? (
+          <g>
+            <circle className="d9-scene-halo" cx="110" cy="128" r="92" fill="url(#scene-halo)" />
+            <g className="d9-scene-rays" style={{ color: '#ffd98a' }}>
+              {Array.from({ length: 10 }).map((_, i) => (
+                <rect key={i} x="109" y="54" width="2" height="18" rx="1" fill="currentColor" opacity="0.55"
+                  transform={`rotate(${i * 36} 110 128)`} />
+              ))}
+            </g>
+            <circle className="d9-scene-body" cx="110" cy="128" r="40" fill="url(#scene-sun-m)" />
+          </g>
+        ) : null}
+
+        {part === 'afternoon' ? (
+          <g>
+            <circle className="d9-scene-halo" cx="140" cy="58" r="78" fill="url(#scene-halo)" />
+            <g className="d9-scene-rays" style={{ color: '#fff0a8' }}>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <rect key={i} x="139" y="8" width="2.4" height="16" rx="1.2" fill="currentColor" opacity="0.7"
+                  transform={`rotate(${i * 30} 140 58)`} />
+              ))}
+            </g>
+            <circle className="d9-scene-body" cx="140" cy="58" r="30" fill="url(#scene-sun-a)" />
+          </g>
+        ) : null}
+
+        {part === 'evening' ? (
+          <g>
+            <ellipse className="d9-scene-halo" cx="110" cy="132" rx="118" ry="70" fill="url(#scene-halo)" />
+            <circle className="d9-scene-body" cx="110" cy="132" r="46" fill="url(#scene-sun-e)" />
+            <rect x="18" y="118" width="184" height="2" rx="1" fill="#ff9a6a" opacity="0.4" />
+            <rect x="40" y="110" width="140" height="1.6" rx="1" fill="#ffb98a" opacity="0.3" />
+          </g>
+        ) : null}
+
+        {part === 'night' ? (
+          <g>
+            <circle className="d9-scene-halo" cx="150" cy="52" r="70" fill="url(#scene-halo)" />
+            <g className="d9-scene-stars" fill="#dbe4ff">
+              <circle className="d9-star" cx="60" cy="40" r="1.6" style={{ animationDelay: '0s' }} />
+              <circle className="d9-star" cx="92" cy="70" r="1.2" style={{ animationDelay: '0.6s' }} />
+              <circle className="d9-star" cx="70" cy="96" r="1.5" style={{ animationDelay: '1.2s' }} />
+              <circle className="d9-star" cx="186" cy="92" r="1.3" style={{ animationDelay: '0.3s' }} />
+              <circle className="d9-star" cx="196" cy="34" r="1.6" style={{ animationDelay: '0.9s' }} />
+              <circle className="d9-star" cx="44" cy="74" r="1.1" style={{ animationDelay: '1.6s' }} />
+              <circle className="d9-star" cx="118" cy="104" r="1.2" style={{ animationDelay: '2s' }} />
+            </g>
+            <circle className="d9-scene-body" cx="150" cy="52" r="30" fill="url(#scene-moon)" mask="url(#scene-crescent)" />
+          </g>
+        ) : null}
       </svg>
-      <span className="d9-spark-cap">Daily spending this month</span>
     </div>
   );
 }
 
-function GreetingCard({ user, line, balance, currency, daily, showBalance, onAdd }) {
+function GreetingCard({ user, line, balance, currency, showBalance, onAdd }) {
   const { words, part } = greetingFor();
   const first = user?.name?.split(' ')[0] || 'there';
   const today = new Date().toLocaleDateString('en', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -123,7 +178,7 @@ function GreetingCard({ user, line, balance, currency, daily, showBalance, onAdd
           ) : null}
         </div>
       </div>
-      <GreetSpark daily={daily} />
+      <TimeScene part={part} />
     </section>
   );
 }
@@ -380,7 +435,6 @@ export default function Dashboard() {
         line={personalLine({ totals, goal, month, currency })}
         balance={totals.balance}
         currency={currency}
-        daily={daily}
         showBalance={month === monthKey(new Date())}
         onAdd={() => setAdding(true)}
       />

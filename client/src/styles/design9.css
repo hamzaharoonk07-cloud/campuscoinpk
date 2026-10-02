@@ -939,7 +939,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   --g-bg: linear-gradient(120deg, #e7f7ee 0%, #f7f9ff 55%, #fff4e0 100%);
   --g-chip: rgba(18, 18, 20, 0.07);
   --g-glow: rgba(255, 196, 92, 0.55);
-  --g-accent: #5b91ff;
+  --g-accent: #ffcf8a;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -985,7 +985,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   --g-bg: linear-gradient(120deg, #15803d 0%, #22c55e 55%, #6ee7b7 100%);
   --g-chip: rgba(255, 255, 255, 0.18);
   --g-glow: rgba(255, 236, 160, 0.6);
-  --g-accent: rgba(255, 255, 255, 0.92);
+  --g-accent: #fff0a8;
 }
 .d9-greet.is-evening {
   --g-ink: #fff;
@@ -993,7 +993,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   --g-bg: radial-gradient(120% 140% at 85% 20%, #1d4b34 0%, #142b1e 45%, #121214 100%);
   --g-chip: rgba(255, 255, 255, 0.12);
   --g-glow: rgba(110, 231, 183, 0.45);
-  --g-accent: #6ee7b7;
+  --g-accent: #ff8a5c;
 }
 .d9-greet.is-night {
   --g-ink: #fff;
@@ -1008,7 +1008,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   --g-soft: rgba(255, 255, 255, 0.72);
   --g-bg: linear-gradient(120deg, #15301f 0%, #19191f 60%, #2b2418 100%);
   --g-chip: rgba(255, 255, 255, 0.1);
-  --g-accent: #7aa7ff;
+  --g-accent: #ffcf8a;
 }
 @keyframes d9-greet-in { from { opacity: 0; transform: translateY(10px); } }
 
@@ -1090,33 +1090,44 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
    way three of these used to. */
 .d9-greet-copy { position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; }
 
-/* The spending sparkline fills the right of the band - real data, on the card's
-   accent, where the clip-art money bag used to float. */
-.d9-spark {
+/* The cinematic time-of-day scene fills the right of the band. currentColor
+   (from --g-accent) tints the atmospheric halo; the celestial bodies carry
+   their own gradients. */
+.d9-scene {
   position: relative;
   z-index: 1;
-  flex: 0 0 300px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.4rem;
+  flex: 0 0 220px;
+  height: 130px;
   color: var(--g-accent);
+  animation: d9-scene-in 1s var(--ease-out) 0.15s backwards;
 }
-.d9-spark-svg {
-  width: 100%;
-  height: 96px;
-  display: block;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.14));
-  animation: d9-spark-draw 0.9s var(--ease-out) 0.2s backwards;
+.d9-scene-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+@keyframes d9-scene-in { from { opacity: 0; transform: scale(0.94); } }
+
+/* The sun/moon glows and drifts; rays turn slowly; stars breathe. All slow and
+   atmospheric, so it reads cinematic rather than busy. */
+.d9-scene-body {
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 10px rgba(255, 220, 150, 0.45));
+  animation: d9-scene-float 9s ease-in-out infinite;
 }
-@keyframes d9-spark-draw { from { opacity: 0; transform: translateY(8px); } }
-.d9-spark-cap {
-  text-align: right;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--g-soft);
+.d9-scene.is-night .d9-scene-body { filter: drop-shadow(0 0 12px rgba(170, 195, 255, 0.5)); }
+.d9-scene-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: d9-scene-breathe 7s ease-in-out infinite;
 }
+.d9-scene-rays {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: d9-scene-turn 80s linear infinite;
+}
+.d9-star { animation: d9-scene-twinkle 3.2s ease-in-out infinite; }
+@keyframes d9-scene-float { 50% { transform: translateY(-5px); } }
+@keyframes d9-scene-breathe { 0%, 100% { opacity: 0.85; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes d9-scene-turn { to { transform: rotate(360deg); } }
+@keyframes d9-scene-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
 /* Empty state only: a soft glow where the sparkline will be once there's data. */
 .d9-greet-art { position: absolute; top: 1.1rem; right: 1.6rem; width: 110px; height: 110px; pointer-events: none; }
@@ -1134,7 +1145,7 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
 
 @media (max-width: 760px) {
   .d9-greet { padding: 1.2rem 1.1rem; border-radius: 22px; }
-  .d9-greet-art, .d9-spark { display: none; }
+  .d9-greet-art, .d9-scene { display: none; }
   .d9-greet h2 { font-size: 1.2rem; gap: 0.6rem; }
   .d9-greet h2 .avatar { display: none; }
   .d9-greet-wave { width: 26px; height: 26px; }
@@ -1187,7 +1198,11 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   .d9-greet::before,
   .d9-greet-wave,
   .d9-greet-art img,
-  .d9-spark-svg,
+  .d9-scene,
+  .d9-scene-body,
+  .d9-scene-halo,
+  .d9-scene-rays,
+  .d9-star,
   .welcome-back,
   .welcome-back-wave { animation: none; }
   .d9-greet::before { display: none; }
