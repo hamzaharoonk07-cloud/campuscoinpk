@@ -957,7 +957,7 @@ export default function Landing() {
           </div>
           <p className="lp-colophon">
             Campus Coin is a budgeting app made for students. It holds no real money, connects to no bank, and its
-            suggestions are prompts to look closer, not financial advice.
+            suggestions are prompts to look closer, not financial advice. <Link to="/privacy">Privacy Policy</Link>.
           </p>
         </div>
       </footer>

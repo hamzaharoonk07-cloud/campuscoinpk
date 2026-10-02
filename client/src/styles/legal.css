@@ -1,0 +1,25 @@
+/* Privacy policy / legal pages: a clean, readable single column, light or dark. */
+.legal {
+  min-height: 100vh;
+  background: var(--bg, #f7f9fb);
+  color: var(--ink, #15161a);
+  padding: 2.5rem 1.25rem 4rem;
+}
+.legal-wrap { max-width: 720px; margin: 0 auto; }
+.legal-back {
+  display: inline-block;
+  margin-bottom: 1.75rem;
+  font-weight: 700;
+  color: #15803d;
+  text-decoration: none;
+}
+.legal h1 { font-size: clamp(1.8rem, 5vw, 2.4rem); margin: 0 0 0.35rem; letter-spacing: -0.03em; }
+.legal-date { margin: 0 0 2rem; opacity: 0.6; font-size: 0.9rem; }
+.legal h2 { font-size: 1.2rem; margin: 2rem 0 0.6rem; letter-spacing: -0.02em; }
+.legal p, .legal li { line-height: 1.65; font-size: 1rem; }
+.legal ul { padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.legal a { color: #15803d; }
+@media (prefers-color-scheme: dark) {
+  .legal { background: #0f1012; color: #e7e7ea; }
+  .legal-back, .legal a { color: #6ee7b7; }
+}
