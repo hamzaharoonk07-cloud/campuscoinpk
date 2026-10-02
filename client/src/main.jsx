@@ -19,6 +19,17 @@ import { installPointerEffects } from './lib/pointerEffects.js';
 
 installPointerEffects();
 
+// Register the service worker so the app is installable (Chrome needs a SW with
+// a fetch handler before it offers "Install app") and opens offline. Only in
+// production builds, so Vite's dev server isn't shadowed by a stale cache.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* install just falls back to the manual add-to-home-screen hint */
+    });
+  });
+}
+
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

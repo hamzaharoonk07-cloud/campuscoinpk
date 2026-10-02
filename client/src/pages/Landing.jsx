@@ -5,6 +5,7 @@ import { SITEMAP } from './Sitemap.jsx';
 import { ArtIcon, artUrl, ChartArt, ChatArt, ReceiptArt, WalletArt } from '../components/Illustrations.jsx';
 import CoinBot from '../components/CoinBot.jsx';
 import ScrollStory from '../components/ScrollStory.jsx';
+import InstallButton from '../components/InstallButton.jsx';
 import { brandFor, inkOn } from '../lib/brands.js';
 import '../styles/landing.css';
 
@@ -520,6 +521,7 @@ export default function Landing() {
                 See how it works
                 <Icon name="right" size={16} />
               </a>
+              <InstallButton />
             </div>
           </div>
 
@@ -923,6 +925,7 @@ export default function Landing() {
             <Link to="/login" className="lp-btn">
               Sign in
             </Link>
+            <InstallButton className="lp-text-link is-light" />
           </div>
         </div>
       </section>

@@ -104,6 +104,15 @@
 .lp-text-link svg { transition: transform 0.2s var(--ease-out); }
 .lp-text-link:hover svg { transform: translateX(4px); }
 .lp-text-link.is-light { color: var(--on-navy); }
+/* InstallButton renders a <button>, so strip the native chrome. */
+button.lp-text-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.lp-install-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
 
 .lp-actions {
   display: flex;
