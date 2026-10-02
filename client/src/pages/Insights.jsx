@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Layout, { MonthPicker, openChat } from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
 import { artUrl, CategoryIcon, SproutArt } from '../components/Illustrations.jsx';
+import PersonalityCard from '../components/PersonalityCard.jsx';
 import { api } from '../lib/api.js';
 import { compactMoney, formatDate, money, monthKey, monthLabel } from '../lib/format.js';
 import { useAuth, useToast } from '../context/AppContext.jsx';
@@ -371,6 +372,8 @@ export default function Insights() {
                   Open budgets
                 </Link>
               </section>
+
+              <PersonalityCard details={details} month={monthLabel(month)} currency={currency} />
             </div>
           </div>
 
