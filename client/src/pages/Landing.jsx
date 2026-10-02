@@ -447,11 +447,14 @@ const FAQ = [
 
 export default function Landing() {
   const navigate = useNavigate();
-  // First phone visit lands on the welcome/onboarding once; desktop and repeat
-  // visits keep this marketing page.
+  // The installed app (TWA / PWA, which runs in standalone display mode) should
+  // open straight on the welcome, never the marketing landing. On the web, the
+  // first phone visit also goes there once; desktop/repeat web visits stay here.
   useEffect(() => {
     try {
-      if (window.innerWidth <= 640 && !localStorage.getItem('campuscoin.welcomed')) {
+      const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
+      const firstPhone = window.innerWidth <= 640 && !localStorage.getItem('campuscoin.welcomed');
+      if (standalone || firstPhone) {
         navigate('/welcome', { replace: true });
       }
     } catch { /* storage blocked - just stay on the landing */ }
