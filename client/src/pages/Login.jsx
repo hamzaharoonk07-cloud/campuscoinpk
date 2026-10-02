@@ -9,8 +9,8 @@ import { markFor } from '../lib/methods.js';
 // These are examples and say so: nothing here comes from an account.
 const FEED = [
   ['Allowance received', 'jazzcash', '+Rs 20,000', true],
-  ['Canteen chai and paratha', 'cash', '−Rs 120', false],
-  ['Rickshaw to campus', 'easypaisa', '−Rs 180', false],
+  ['Canteen lunch', 'cash', '−Rs 120', false],
+  ['Bus to campus', 'easypaisa', '−Rs 180', false],
   ['Photocopies for the exam', 'cash', '−Rs 60', false],
   ['Scholarship instalment', 'bank', '+Rs 15,000', true],
   ['Hostel rent', 'bank', '−Rs 12,000', false],

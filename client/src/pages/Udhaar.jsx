@@ -21,7 +21,7 @@ import { useAuth, useToast } from '../context/AppContext.jsx';
 // Builds the wa.me link that opens WhatsApp with a reminder ready to send.
 function whatsappReminder(person, phone, amount, currency) {
   const digits = String(phone || '').replace(/[^\d]/g, '');
-  const text = `Assalam o alaikum ${person}, chhoti si yaad dahani: Rs ${Math.round(amount)} udhaar baaki hai. Jab aasani ho bhej dena, shukriya. (Campus Coin)`;
+  const text = `Hi ${person}, just a small reminder that Rs ${Math.round(amount)} is still pending between us. Please send it whenever it's convenient. Thanks! (Campus Coin)`;
   const base = digits ? `https://wa.me/${digits}` : 'https://wa.me/';
   return `${base}?text=${encodeURIComponent(text)}`;
 }
@@ -183,7 +183,7 @@ function SplitForm({ onAdded, currency }) {
     return (
       <button type="button" className="udhaar-add-btn is-split" onClick={() => setOpen(true)}>
         <Icon name="user" size={18} />
-        Chai Split
+        Split a Bill
       </button>
     );
   }
@@ -370,7 +370,7 @@ export default function Udhaar() {
       ) : (
         <div className="udhaar-empty">
           <Icon name="user" size={28} />
-          <p>No open udhaar. When you lend for chai or split a bill, note it here so nobody forgets.</p>
+          <p>No open udhaar. When you lend money or split a bill, note it here so nobody forgets.</p>
         </div>
       )}
     </Layout>

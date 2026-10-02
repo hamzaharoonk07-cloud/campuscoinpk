@@ -177,10 +177,10 @@ router.post(
       ...emailLayout({
         heading: `Welcome to Campus Coin, ${first}!`,
         preheader: 'Three things to do first.',
-        paragraphs: [`Assalam-o-alaikum ${first}, your account is ready. Here is how to get your first useful picture of the month:`],
+        paragraphs: [`Hi ${first}, your account is ready. Here is how to get your first useful picture of the month:`],
         steps: [
           "Log this month's allowance, so the dashboard knows what came in.",
-          'Add the last few things you bought - chai, a rickshaw, printing. The category fills itself in.',
+          'Add the last few things you bought - tea, a bus fare, printing. The category fills itself in.',
           'Set one budget on the category you spend most on. It is the change students actually keep to.',
         ],
         button: { label: 'Open your dashboard', url: `${siteUrl()}/dashboard` },

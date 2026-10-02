@@ -76,8 +76,8 @@ function useScrollState(root) {
 // What the categoriser really does with these words, shown as a loop: a
 // description is typed, then the category it would suggest appears.
 const TYPING = [
-  ['chai at the canteen', 'Food'],
-  ['rickshaw to campus', 'Transport'],
+  ['tea at the canteen', 'Food'],
+  ['bus to campus', 'Transport'],
   ['netflix monthly', 'Subscriptions'],
   ['data structures book', 'Academics'],
 ];

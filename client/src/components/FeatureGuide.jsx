@@ -28,7 +28,7 @@ const STEPS = [
   {
     art: 'speech-balloon',
     title: 'Just type it',
-    body: 'Adding a transaction is one line - "chai 150", "kiraya 5000", "ammi ne 2000 diye". Campus Coin finds the amount and picks the category itself, in English or Roman Urdu.',
+    body: 'Adding a transaction is one line - "tea 150", "rent 5000", "allowance 2000". Campus Coin finds the amount and picks the category itself.',
   },
   {
     art: 'bank',

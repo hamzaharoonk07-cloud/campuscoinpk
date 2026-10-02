@@ -7,11 +7,11 @@ const COPY = {
   },
   'eid-fitr': {
     title: 'Eid Mubarak',
-    body: 'Eidi coming in? Say "eidi 2000" and it lands in Gift automatically - and the Zakat & Sadqa calculator on Insights is ready when you are.',
+    body: 'Getting Eid money? Type "Eid money 2000" and it lands in your Gift category automatically.',
   },
   'eid-adha': {
     title: 'Eid Mubarak',
-    body: 'Eidi coming in? Say "eidi 2000" and it lands in Gift automatically - and the Zakat & Sadqa calculator on Insights is ready when you are.',
+    body: 'Getting Eid money? Type "Eid money 2000" and it lands in your Gift category automatically.',
   },
 };
 

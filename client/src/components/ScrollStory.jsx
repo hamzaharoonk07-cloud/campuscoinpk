@@ -30,8 +30,8 @@ const MONTHS = [
 
 // Act III: the food rows the assistant adds up.
 const FOOD_ROWS = [
-  ['Biryani, Student Hall', '450'],
-  ['Canteen chai', '120'],
+  ['Lunch, Student Hall', '450'],
+  ['Canteen coffee', '120'],
   ['Foodpanda dinner', '890'],
 ];
 
@@ -63,19 +63,19 @@ export default function ScrollStory() {
       >
         <div className="story-compose b-compose">
           <Icon name="plus" size={16} />
-          <span className="story-typed">Biryani, Student Hall</span>
+          <span className="story-typed">Lunch, Student Hall</span>
           <span className="story-amount b-amount">450</span>
         </div>
 
         <div className="story-chip b-chip">
           <span className="story-chip-dot" />
           Food
-          <em>matched &ldquo;biryani&rdquo;</em>
+          <em>matched &ldquo;lunch&rdquo;</em>
         </div>
 
         <div className="story-row b-drop">
           <span className="story-row-icon"><Icon name="utensils" size={15} /></span>
-          <span className="story-row-name">Biryani, Student Hall<em>Food &middot; Today</em></span>
+          <span className="story-row-name">Lunch, Student Hall<em>Food &middot; Today</em></span>
           <span className="story-row-amt">&minus;450</span>
         </div>
 
@@ -87,7 +87,7 @@ export default function ScrollStory() {
           </div>
           <div className="story-row is-quiet">
             <span className="story-row-icon"><Icon name="bus" size={15} /></span>
-            <span className="story-row-name">Rickshaw to campus<em>Transport &middot; Yesterday</em></span>
+            <span className="story-row-name">Bus to campus<em>Transport &middot; Yesterday</em></span>
             <span className="story-row-amt">&minus;80</span>
           </div>
         </div>

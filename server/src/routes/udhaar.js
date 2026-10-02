@@ -89,7 +89,7 @@ router.post(
     const diners = names.length + 1;
     const share = Math.round((total / diners) * 100) / 100;
     const when = date ? new Date(date) : new Date();
-    const billNote = note ? `Chai split: ${note}` : `Chai split, ${diners} people`;
+    const billNote = note ? `Bill split: ${note}` : `Bill split, ${diners} people`;
 
     const entries = await Udhaar.insertMany(
       names.map((p) => ({

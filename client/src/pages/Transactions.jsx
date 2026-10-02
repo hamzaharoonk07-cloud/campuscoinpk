@@ -115,7 +115,7 @@ export default function Transactions() {
           <div className="field-row">
             <div className="field">
               <label htmlFor="q">Search</label>
-              <input id="q" type="search" placeholder="canteen, rickshaw..." value={filters.q} onChange={setFilter('q')} />
+              <input id="q" type="search" placeholder="canteen, transport..." value={filters.q} onChange={setFilter('q')} />
             </div>
             <div className="field">
               <label htmlFor="type">Direction</label>

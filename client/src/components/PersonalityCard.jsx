@@ -13,8 +13,8 @@ import { money } from '../lib/format.js';
 
 // Top category -> the base of the name.
 const CATEGORY_TITLES = {
-  Food: 'Chai Connoisseur',
-  Transport: 'Rickshaw Regular',
+  Food: 'Foodie',
+  Transport: 'Commuter',
   'Hostel/Rent': 'Homebody',
   Academics: 'Scholar',
   Subscriptions: 'Streamer',

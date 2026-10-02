@@ -23,7 +23,7 @@ import { useAuth, useToast } from '../context/AppContext.jsx';
 const SpeechRecognition =
   typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-const EXAMPLES = ['chai with friends 150', 'rickshaw do sau', 'allowance 5000', 'printing 60', 'biryani 350'];
+const EXAMPLES = ['tea with friends 150', 'bus fare 200', 'allowance 5000', 'printing 60', 'lunch 350'];
 
 export default function QuickPhrase({ categories = [], onSaved }) {
   const { currency } = useAuth();

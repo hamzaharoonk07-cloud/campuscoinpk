@@ -203,7 +203,7 @@ export default function TransactionForm({ categories, existing, preset, onSaved,
         <label htmlFor="description">What was it?</label>
         <input
           id="description"
-          placeholder="Canteen lunch, rickshaw to campus, Spotify..."
+          placeholder="Canteen lunch, bus to campus, Spotify..."
           value={form.description}
           onChange={set('description')}
         />

@@ -27,8 +27,8 @@ import { useAuth, useToast } from '../context/AppContext.jsx';
 // The things students log most often, one tap away. The description is what
 // the categoriser reads, so each lands in the right category by itself.
 const QUICK = [
-  { label: 'Chai', art: 'hot-beverage', type: 'expense', description: 'Chai at the canteen' },
-  { label: 'Rickshaw', art: 'bus', type: 'expense', description: 'Rickshaw to campus' },
+  { label: 'Tea', art: 'hot-beverage', type: 'expense', description: 'Tea at the canteen' },
+  { label: 'Transport', art: 'bus', type: 'expense', description: 'Bus to campus' },
   { label: 'Printing', art: 'page-facing-up', type: 'expense', description: 'Printing notes' },
   { label: 'Allowance', art: 'dollar-banknote', type: 'income', description: 'Monthly allowance' },
 ];
@@ -188,7 +188,7 @@ function GettingStarted({ totals, budgets, goal, onAllowance, onExpense }) {
     {
       art: 'shopping-bags',
       title: 'Add something you bought',
-      body: 'Chai, a rickshaw, printing - type it the way you would say it and the category fills itself in.',
+      body: 'Tea, a bus fare, printing - type it the way you would say it and the category fills itself in.',
       done: totals.expense > 0,
       action: (
         <span className="d9-steps-actions">
