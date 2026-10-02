@@ -8,6 +8,9 @@
   display: flex;
   justify-content: center;
 }
+/* Everything here sizes with padding inside its width, so full-width buttons and
+   inputs never spill past the screen edge. */
+.wel, .wel * { box-sizing: border-box; }
 .wel-video {
   position: absolute;
   inset: 0;
@@ -36,7 +39,7 @@
   color: #fff;
 }
 .wel-brand { margin-bottom: 1.5rem; }
-.wel-brand .wordmark { color: #fff; font-weight: 700; font-size: 1.5rem; }
+.wel-brand .wordmark, .wel-brand .wordmark b { color: #fff; font-weight: 700; font-size: 1.5rem; }
 .wel-brand .brand-mark, .wel-brand svg { filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4)); }
 .wel-tag {
   margin: 0.6rem 0 0;
