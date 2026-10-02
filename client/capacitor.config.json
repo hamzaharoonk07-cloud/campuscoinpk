@@ -1,0 +1,9 @@
+{
+  "appId": "com.campuscoin.mobile",
+  "appName": "Campus Coin",
+  "webDir": "dist",
+  "server": {
+    "url": "https://campuscoinpk.vercel.app",
+    "androidScheme": "https"
+  }
+}

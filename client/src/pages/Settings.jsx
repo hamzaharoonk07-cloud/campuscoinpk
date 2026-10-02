@@ -10,6 +10,7 @@ import { artUrl } from '../components/Illustrations.jsx';
 import { CURRENCY_SYMBOLS, formatDate } from '../lib/format.js';
 import { StudyOptions, studyLabel } from '../lib/study.jsx';
 import { useAuth, useTheme, useToast } from '../context/AppContext.jsx';
+import { isNative, smsStatus, smsRequestPermission, smsConfigure, smsSetEnabled } from '../lib/smsForwarder.js';
 
 const SCALES = [
   { value: 0.875, label: 'Small' },
@@ -23,6 +24,83 @@ const SCALES = [
  * it is generated - the server only ever keeps its hash, so there is no
  * "reveal it again" later, only "generate a new one".
  */
+/**
+ * Only real inside the Android app build: turns on the native SMS listener
+ * (android/.../SmsReceiver.java), which catches bank SMS directly with no
+ * MacroDroid or any other app involved. One tap generates a fresh webhook
+ * key (same kind MacroDroid users paste by hand), hands it straight to the
+ * native plugin, asks for the SMS permission, and switches it on.
+ */
+function NativeSmsSetup() {
+  const toast = useToast();
+  const [status, setStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (isNative()) smsStatus().then(setStatus).catch(() => {});
+  }, []);
+
+  if (!isNative()) return null;
+
+  const setUp = async () => {
+    setBusy(true);
+    try {
+      const url = `${window.location.origin}/api/webhook/sms`;
+      const { key } = await api.post('/auth/webhook-key', {});
+      await smsConfigure(url, key);
+      const result = await smsRequestPermission();
+      if (!result.granted) {
+        toast.error('Permission needed', 'Allow SMS access for this to work.');
+        setStatus(result);
+        return;
+      }
+      await smsSetEnabled(true);
+      setStatus({ ...result, enabled: true, configured: true });
+      toast.success('Done', 'Bank SMS will now log automatically, with the app closed.');
+    } catch (err) {
+      toast.error('Could not set this up', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const turnOff = async () => {
+    setBusy(true);
+    try {
+      const result = await smsSetEnabled(false);
+      setStatus(result);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (status?.enabled) {
+    return (
+      <div className="security-row">
+        <span>
+          <strong>On for this phone</strong>
+          <small>Bank SMS logs automatically - no MacroDroid, no app to open.</small>
+        </span>
+        <button type="button" className="btn btn-sm" onClick={turnOff} disabled={busy}>
+          Turn off
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="security-row">
+      <span>
+        <strong>Set up on this phone</strong>
+        <small>Skip MacroDroid entirely - one tap, using the app you're in right now.</small>
+      </span>
+      <button type="button" className="btn btn-primary btn-sm" onClick={setUp} disabled={busy}>
+        {busy ? 'Setting up…' : 'Turn on'}
+      </button>
+    </div>
+  );
+}
+
 function WebhookKey() {
   const toast = useToast();
   const [active, setActive] = useState(null);
@@ -657,12 +735,7 @@ export default function Settings() {
               <span className="panel-note">5-minute setup, once</span>
             </div>
             <div className="panel-body">
-              <p className="security-note is-quiet" style={{ marginBottom: '1rem' }}>
-                <Icon name="repeat" size={16} />
-                Have a phone automation forward your bank SMS the moment it arrives, and it logs
-                itself - no opening the app. The key below is what proves the message came from
-                you.
-              </p>
+              <NativeSmsSetup />
               <WebhookKey />
             </div>
           </section>
