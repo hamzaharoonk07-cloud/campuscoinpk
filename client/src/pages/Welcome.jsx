@@ -289,9 +289,8 @@ function Join({ onPhone, onEmail, onLogin }) {
       <div className="wl-brand" style={{ justifyContent: 'center', marginBottom: 18 }}><BrandMark size={38} /><b style={{ fontSize: 22 }}>Campus Coin</b></div>
       <h2 className="wl-h2" style={{ textAlign: 'center', fontSize: 34 }}>Create your <span className="wl-accentword">account</span></h2>
       <p className="wl-sub" style={{ textAlign: 'center', margin: '8px auto 18px' }}>Pick the way that suits you. It takes seconds.</p>
-      <button type="button" className="wl-cta" onClick={() => { haptic(); onPhone(); }}>Continue with phone number<span className="wl-shine" /></button>
       <div className="wl-google"><GoogleSignInButton bare /></div>
-      <button type="button" className="wl-ghost" onClick={onEmail}>Sign up with email</button>
+      <button type="button" className="wl-cta" onClick={() => { haptic(); onEmail(); }}>Sign up with email<span className="wl-shine" /></button>
       <button type="button" className="wl-link" onClick={onLogin}>I already have an account</button>
     </div>
   );
