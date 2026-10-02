@@ -39,19 +39,61 @@ export async function squarePhoto(file, size = 256) {
 }
 
 /**
- * Two copies of a receipt photo: a sharper one for reading the text, and a
- * smaller one to keep with the transaction.
+ * A high-contrast grayscale copy for OCR. Tesseract reads clean black-on-white
+ * text far better than a raw phone photo, so the reading image is: scaled into
+ * a band where the text is big enough (small photos are upscaled, huge ones
+ * shrunk), turned grayscale, and contrast-stretched around its own midtone so
+ * faint thermal-receipt ink darkens and a grey background washes out. It is
+ * deliberately a soft stretch, not a hard black/white threshold, which would
+ * erase light print on a crumpled receipt.
+ */
+function toReadingImage(img) {
+  const longest = Math.max(img.width, img.height);
+  // Aim for ~1600px on the long edge: upscale a small photo, shrink a big one.
+  const scale = Math.min(2, Math.max(0.3, 1600 / longest));
+  const width = Math.round(img.width * scale);
+  const height = Math.round(img.height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, width, height);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, width, height);
+
+  try {
+    const px = ctx.getImageData(0, 0, width, height);
+    const d = px.data;
+    // Contrast curve: push values away from mid-grey (128). ~1.5x is a strong
+    // but safe boost for receipt print.
+    const c = 1.5;
+    for (let i = 0; i < d.length; i += 4) {
+      const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      let v = (g - 128) * c + 128;
+      v = v < 0 ? 0 : v > 255 ? 255 : v;
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    ctx.putImageData(px, 0, 0);
+  } catch {
+    /* getImageData can throw on a tainted canvas; the plain resized image
+       still reads, just without the contrast boost. */
+  }
+  return canvas.toDataURL('image/jpeg', 0.95);
+}
+
+/**
+ * Two copies of a receipt photo: a high-contrast grayscale one for reading the
+ * text (see toReadingImage), and a smaller colour one to keep with the
+ * transaction.
  */
 export async function receiptPhotos(file) {
   const img = await loadImage(file);
-  const fit = (max) => {
-    const scale = Math.min(1, max / Math.max(img.width, img.height));
-    return [Math.round(img.width * scale), Math.round(img.height * scale)];
-  };
-  const [rw, rh] = fit(1800);
-  const [sw, sh] = fit(1000);
+  const scale = Math.min(1, 1000 / Math.max(img.width, img.height));
+  const [sw, sh] = [Math.round(img.width * scale), Math.round(img.height * scale)];
   return {
-    forReading: toDataUrl(img, 0, 0, img.width, img.height, rw, rh, 0.92),
+    forReading: toReadingImage(img),
     forStoring: toDataUrl(img, 0, 0, img.width, img.height, sw, sh, 0.7),
   };
 }

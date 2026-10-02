@@ -11,13 +11,21 @@
 export async function readText(image, onProgress = () => {}) {
   // Loaded only when a receipt is actually scanned, so the rest of the app
   // does not pay for it.
-  const { createWorker } = await import('tesseract.js');
+  const { createWorker, PSM } = await import('tesseract.js');
   const worker = await createWorker('eng', 1, {
     logger: (m) => {
       if (m.status === 'recognizing text') onProgress(m.progress);
     },
   });
   try {
+    // A receipt is one uniform block of lines, so SINGLE_BLOCK segments it far
+    // better than the default auto mode (which hunts for columns and tables
+    // that are not there), and keeping interword spaces preserves the gap
+    // between a label and its amount on the same line.
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      preserve_interword_spaces: '1',
+    });
     const { data } = await worker.recognize(image);
     return data.text || '';
   } finally {
@@ -43,11 +51,15 @@ function findTotal(lines) {
     for (let i = lines.length - 1; i >= 0; i -= 1) {
       const line = lines[i];
       if (!word.test(line) || NOT_TOTAL.test(line)) continue;
-      // The figure is usually on the same line, sometimes on the next one.
+      // The figure is usually on the same line, sometimes on one of the next
+      // couple (OCR often breaks "TOTAL" and its amount onto separate lines).
       const here = numbersIn(line.replace(word, ''));
       if (here.length) return Math.max(...here);
-      const next = lines[i + 1] ? numbersIn(lines[i + 1]) : [];
-      if (next.length) return Math.max(...next);
+      for (let j = i + 1; j <= i + 2 && j < lines.length; j += 1) {
+        if (NOT_TOTAL.test(lines[j])) continue;
+        const near = numbersIn(lines[j]);
+        if (near.length) return Math.max(...near);
+      }
     }
   }
   // No labelled total: the largest amount with a decimal point or a currency
