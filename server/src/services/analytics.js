@@ -280,3 +280,58 @@ export async function budgetProgress(Budget, userId, month) {
     })
     .sort((a, b) => b.pct - a.pct);
 }
+
+/**
+ * No-spend streaks (brief: "Sticky and viral"). The current streak counts
+ * consecutive full days with zero expense, working backward from
+ * *yesterday* rather than today - today is not over yet, so counting it
+ * would credit a streak for a day that could still break it an hour later.
+ * The longest streak looks at the same lookback window so a student who
+ * broke a long streak last week still sees what they are chasing back to.
+ */
+export async function noSpendStreak(userId, { lookbackDays = 90 } = {}) {
+  const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
+  const since = new Date(today);
+  since.setUTCDate(since.getUTCDate() - lookbackDays);
+
+  const [rows, first] = await Promise.all([
+    Transaction.aggregate([
+      { $match: { user: oid(userId), type: 'expense', date: { $gte: since } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$date', timezone: 'UTC' } } } },
+    ]),
+    Transaction.findOne({ user: oid(userId) }).sort({ date: 1 }).select('date'),
+  ]);
+
+  if (!first) return { current: 0, longest: 0, hasHistory: false };
+
+  const spentDays = new Set(rows.map((r) => r._id));
+  const dayKey = (d) => d.toISOString().slice(0, 10);
+  const firstDay = new Date(Date.UTC(first.date.getUTCFullYear(), first.date.getUTCMonth(), first.date.getUTCDate()));
+
+  let current = 0;
+  const cursor = new Date(today);
+  cursor.setUTCDate(cursor.getUTCDate() - 1); // start from yesterday
+  while (cursor >= since && cursor >= firstDay) {
+    if (spentDays.has(dayKey(cursor))) break;
+    current += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  let longest = 0;
+  let run = 0;
+  const walk = new Date(since > firstDay ? since : firstDay);
+  const end = new Date(today);
+  end.setUTCDate(end.getUTCDate() - 1);
+  while (walk <= end) {
+    if (spentDays.has(dayKey(walk))) {
+      longest = Math.max(longest, run);
+      run = 0;
+    } else {
+      run += 1;
+    }
+    walk.setUTCDate(walk.getUTCDate() + 1);
+  }
+  longest = Math.max(longest, run, current);
+
+  return { current, longest, hasHistory: true };
+}

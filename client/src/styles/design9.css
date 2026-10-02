@@ -1016,6 +1016,9 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
    once what's left per day gets uncomfortably thin. */
 .d9-greet-chip.is-low { color: var(--warn); }
 .d9-greet.is-afternoon .d9-greet-chip.is-low { background: #fff; color: var(--warn); }
+/* No-spend streak - its own colour so it never reads as a warning. */
+.d9-greet-chip.is-streak { color: var(--blue-deep); font-weight: 700; }
+.d9-greet.is-afternoon .d9-greet-chip.is-streak { background: #fff; color: var(--fill-strong); }
 .d9-greet-add {
   display: inline-flex;
   align-items: center;

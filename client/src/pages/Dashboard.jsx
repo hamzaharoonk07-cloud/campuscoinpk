@@ -62,7 +62,7 @@ const DAY_ART = {
  * morning, bright blue in the afternoon, deep navy in the evening and black
  * at night.
  */
-function GreetingCard({ user, line, balance, currency, pace, onAdd }) {
+function GreetingCard({ user, line, balance, currency, pace, streak, onAdd }) {
   const { words, part } = greetingFor();
   const [big, small, spark] = DAY_ART[part];
   const first = user?.name?.split(' ')[0] || 'there';
@@ -89,6 +89,13 @@ function GreetingCard({ user, line, balance, currency, pace, onAdd }) {
           {pace ? (
             <span className={`d9-greet-chip${pace.low ? ' is-low' : ''}`}>
               {money(pace.perDay, currency)}/day &middot; {pace.daysLeft} {pace.daysLeft === 1 ? 'day' : 'days'} left
+            </span>
+          ) : null}
+          {/* No-spend streak - yesterday backward, so it never claims credit
+              for a today that could still break it. */}
+          {streak?.hasHistory && streak.current > 0 ? (
+            <span className="d9-greet-chip is-streak">
+              &#128293; {streak.current}-day no-spend streak
             </span>
           ) : null}
           <button type="button" className="d9-greet-add" onClick={onAdd}>
@@ -348,7 +355,7 @@ export default function Dashboard() {
     );
   }
 
-  const { totals, spending, trend, tips, recent, insight, budgets, goal, announcements, methods, flow, methodsIn } = data;
+  const { totals, spending, trend, tips, recent, insight, budgets, goal, announcements, methods, flow, methodsIn, streak } = data;
   // Last month, for the change chips: the trend ends with the month shown.
   const before = trend.length > 1 ? trend[trend.length - 2] : null;
   const [year, monthIndex] = month.split('-').map(Number);
@@ -367,6 +374,7 @@ export default function Dashboard() {
         balance={totals.balance}
         currency={currency}
         pace={dailyPace({ totals, goal, month })}
+        streak={streak}
         onAdd={() => setAdding(true)}
       />
 
