@@ -37,15 +37,26 @@ const METHOD_HINTS = [
   [/standard chartered|\bscb\b/i, 'bank'],
   [/faysal/i, 'bank'],
   [/\bnbp\b|national bank/i, 'bank'],
-  [/\bbank\b|\ba\/c\b|account|debit card|credit card|atm/i, 'bank'],
+  [/bank ?islami|dubai islamic|\bdib\b|soneri|\bjs bank\b|habib ?metro|bank of punjab|\bbop\b|askari/i, 'bank'],
+  // Foreign / international banks a student abroad or with a foreign card uses.
+  [/\bhsbc\b|citibank|\bciti\b|barclays|lloyds|natwest|santander|revolut|\bwise\b|monzo|chase|wells fargo|bank of america|\bboa\b|emirates nbd|\bnbd\b|\badcb\b|mashreq|\brakbank\b|\bfab\b|al rajhi|\bsnb\b|\bqnb\b/i, 'bank'],
+  [/\bbank\b|\ba\/c\b|account|debit card|credit card|atm|visa|master ?card|\bamex\b/i, 'bank'],
 ];
 
-/** The amount in an SMS: "Rs 1,500.00", "PKR 850", "Rs.1200", "1,200/-". */
+/**
+ * The amount in an SMS: "Rs 1,500.00", "PKR 850", "Rs.1200", "1,200/-", and
+ * foreign-bank forms too - "$45.00", "USD 45", "AED 120", "£20", "EUR 15".
+ */
 export function extractSmsAmount(text) {
   const money = String(text || '')
     // Prefer a figure that sits next to a currency marker, so a date or a
-    // reference number never gets read as the amount.
-    .match(/(?:rs\.?|pkr|₨|inr)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:\/-|rupees|rs\b)/i);
+    // reference number never gets read as the amount. Each number must START
+    // with a digit (\d[\d,]*), not a bare comma - otherwise the comma in
+    // "Customer, Rs.2,500" matched and read an empty amount, so a very common
+    // bank-SMS opening made the whole alert fail to log.
+    .match(
+      /(?:rs\.?|pkr|inr|usd|eur|gbp|aed|sar|qar|cad|aud|₨|\$|€|£)\s*(\d[\d,]*(?:\.\d{1,2})?)|(\d[\d,]*(?:\.\d{1,2})?)\s*(?:\/-|rupees|rs\b|dollars?|usd|eur|euros?|gbp|pounds?|aed|dirhams?|sar|riyals?)/i
+    );
   if (!money) return null;
   const digits = (money[1] || money[2] || '').replace(/,/g, '');
   const value = parseFloat(digits);
@@ -75,6 +86,7 @@ const MERCHANT_STOP = new Set([
   'on', 'dated', 'ref', 'reference', 'trx', 'txn', 'via', 'through', 'your', 'was',
   'is', 'successful', 'available', 'avbl', 'bal', 'balance', 'account', 'a/c',
   'new', 'card', 'and', 'with', 'of', 'to', 'at', 'from', 'do', 'not', 'share',
+  'using', 'for', 'ending', 'no', 'number',
 ]);
 
 /**
