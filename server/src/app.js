@@ -17,6 +17,7 @@ import tipRoutes from './routes/tips.js';
 import notificationRoutes from './routes/notifications.js';
 import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin.js';
+import webhookRoutes from './routes/webhook.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +55,9 @@ app.use('/api/tips', tipRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+// No protect() here - the caller is a phone-side forwarder, not a signed-in
+// browser; routes/webhook.js checks the per-account key itself.
+app.use('/api/webhook', webhookRoutes);
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
 
 // Locally the built React app is served by Express. On Vercel the static files

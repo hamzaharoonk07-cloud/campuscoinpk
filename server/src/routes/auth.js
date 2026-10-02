@@ -227,6 +227,33 @@ router.patch(
 );
 
 /**
+ * Creates (or rotates) this account's webhook key for automated SMS
+ * forwarding (MacroDroid, Tasker, iOS Shortcuts). The raw key is returned
+ * exactly once, here - only its hash is kept, so a lost key means
+ * generating a new one, not recovering the old.
+ */
+router.post(
+  '/webhook-key',
+  protect,
+  wrap(async (req, res) => {
+    const key = crypto.randomBytes(24).toString('hex');
+    req.user.webhookKeyHash = crypto.createHash('sha256').update(key).digest('hex');
+    await req.user.save();
+    res.json({ key });
+  })
+);
+
+/** Whether a webhook key already exists, without exposing it again. */
+router.get(
+  '/webhook-key',
+  protect,
+  wrap(async (req, res) => {
+    const user = await User.findById(req.user._id).select('+webhookKeyHash');
+    res.json({ active: Boolean(user.webhookKeyHash) });
+  })
+);
+
+/**
  * Change password while signed in. The password is never changed here
  * directly: this emails a one-time link to the account's own address, so
  * only someone who can read that inbox can set a new password - a stolen

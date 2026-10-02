@@ -43,6 +43,13 @@ const userSchema = new mongoose.Schema(
     resetTokenHash: { type: String, select: false },
     resetTokenExpires: { type: Date, select: false },
 
+    // Webhook automation (SRS brief, "Automation app + webhook"): a long-lived
+    // key a phone-side forwarder (MacroDroit, Tasker, iOS Shortcuts) sends with
+    // each bank SMS it relays, since that caller can't do a normal sign-in.
+    // Same pattern as the reset token above - only its hash is stored, the
+    // real key is shown once, at generation.
+    webhookKeyHash: { type: String, select: false },
+
     // Sessions. Every sign-in token carries this number; raising it (on a new
     // password, or "sign out everywhere") makes every older token invalid.
     tokenVersion: { type: Number, default: 0 },

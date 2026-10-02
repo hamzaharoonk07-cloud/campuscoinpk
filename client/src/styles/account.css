@@ -67,3 +67,25 @@
 .pw-link-sent svg { flex: none; margin-top: 2px; color: var(--blue-deep); }
 .pw-link-sent a { color: var(--blue-deep); font-weight: 600; }
 .pw-link-btn { width: 100%; justify-content: center; }
+
+/* The webhook key panel - a URL and a key, both meant to be copied once
+   into a phone automation, not read. */
+.webhook-key { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1rem; }
+.webhook-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.webhook-field label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.webhook-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  padding: 0.55rem 0.7rem;
+}
+.webhook-copy-row code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  color: var(--text);
+}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
@@ -17,6 +17,80 @@ const SCALES = [
   { value: 1.125, label: 'Large' },
   { value: 1.375, label: 'Largest' },
 ];
+
+/**
+ * The webhook key for automatic SMS logging. Shown exactly once, right after
+ * it is generated - the server only ever keeps its hash, so there is no
+ * "reveal it again" later, only "generate a new one".
+ */
+function WebhookKey() {
+  const toast = useToast();
+  const [active, setActive] = useState(null);
+  const [key, setKey] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api.get('/auth/webhook-key').then((d) => setActive(d.active)).catch(() => {});
+  }, []);
+
+  const url = `${window.location.origin}/api/webhook/sms`;
+
+  const generate = async () => {
+    setBusy(true);
+    try {
+      const { key: newKey } = await api.post('/auth/webhook-key', {});
+      setKey(newKey);
+      setActive(true);
+      toast.success('Key generated - copy it now, it will not be shown again');
+    } catch (err) {
+      toast.error('Could not generate a key', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copy = (text) => {
+    navigator.clipboard?.writeText(text);
+    toast.success('Copied');
+  };
+
+  return (
+    <div className="webhook-key">
+      <div className="webhook-field">
+        <label>Webhook URL</label>
+        <div className="webhook-copy-row">
+          <code>{url}</code>
+          <button type="button" className="btn btn-sm" onClick={() => copy(url)}>
+            Copy
+          </button>
+        </div>
+      </div>
+
+      {key ? (
+        <div className="webhook-field">
+          <label>Your key (shown once)</label>
+          <div className="webhook-copy-row">
+            <code>{key}</code>
+            <button type="button" className="btn btn-sm" onClick={() => copy(key)}>
+              Copy
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <button type="button" className="btn btn-primary btn-sm" onClick={generate} disabled={busy}>
+        <Icon name="repeat" size={14} />
+        {busy ? 'Generating…' : active ? 'Generate a new key' : 'Generate a key'}
+      </button>
+      {active && !key ? <p className="security-note is-quiet">A key is already active. Generating a new one replaces it.</p> : null}
+
+      <p className="security-note is-quiet" style={{ marginTop: '0.75rem' }}>
+        Send a POST request to the URL above with JSON body <code>{'{'}"key": "…", "text": "…"{'}'}</code>
+        (the pasted SMS) - a MacroDroid "HTTP Request" action or a Tasker/Shortcuts HTTP step both do this.
+      </p>
+    </div>
+  );
+}
 
 export default function Settings() {
   const { user, updateProfile } = useAuth();
@@ -396,6 +470,22 @@ export default function Settings() {
                 <Icon name="shield" size={16} />
                 Passwords are stored only as salted bcrypt hashes. Five wrong tries lock sign-in for 15 minutes.
               </p>
+            </div>
+          </section>
+
+          <section className="panel" id="webhook">
+            <div className="panel-head">
+              <h2>Automatic SMS logging</h2>
+              <span className="panel-note">For MacroDroid, Tasker or iOS Shortcuts</span>
+            </div>
+            <div className="panel-body">
+              <p className="security-note is-quiet" style={{ marginBottom: '1rem' }}>
+                <Icon name="repeat" size={16} />
+                Have a phone automation forward your bank SMS the moment it arrives, and it logs
+                itself - no opening the app. The key below is what proves the message came from
+                you.
+              </p>
+              <WebhookKey />
             </div>
           </section>
 
