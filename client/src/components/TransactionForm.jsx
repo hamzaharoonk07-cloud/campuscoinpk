@@ -190,7 +190,7 @@ export default function TransactionForm({ categories, existing, preset, onSaved,
             required
             value={form.amount}
             onChange={set('amount')}
-            autoFocus
+            inputMode="decimal"
           />
         </div>
         <div className="field">
