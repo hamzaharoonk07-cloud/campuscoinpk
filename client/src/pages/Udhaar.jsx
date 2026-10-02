@@ -100,6 +100,112 @@ function AddForm({ onAdded }) {
   );
 }
 
+/**
+ * Chai Split — one bill, divided among whoever was at the table. Adding a
+ * name row for each friend (not just a headcount) means each one gets their
+ * own udhaar entry and their own WhatsApp reminder, same as adding them by
+ * hand would, just all at once.
+ */
+function SplitForm({ onAdded, currency }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [total, setTotal] = useState('');
+  const [note, setNote] = useState('');
+  const [friends, setFriends] = useState([{ name: '', phone: '' }]);
+  const [busy, setBusy] = useState(false);
+
+  const updateFriend = (i, field, value) =>
+    setFriends((list) => list.map((f, idx) => (idx === i ? { ...f, [field]: value } : f)));
+  const addFriend = () => setFriends((list) => [...list, { name: '', phone: '' }]);
+  const removeFriend = (i) => setFriends((list) => list.filter((_, idx) => idx !== i));
+
+  const diners = friends.filter((f) => f.name.trim()).length + 1;
+  const share = Number(total) > 0 ? Math.round((Number(total) / diners) * 100) / 100 : 0;
+
+  const reset = () => {
+    setTotal('');
+    setNote('');
+    setFriends([{ name: '', phone: '' }]);
+    setOpen(false);
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    try {
+      await api.post('/udhaar/split', {
+        totalAmount: Number(total),
+        note,
+        people: friends.filter((f) => f.name.trim()),
+      });
+      toast.success(`Split, ${diners} ways`, `${friends.filter((f) => f.name.trim()).length} friend(s) each owe their share`);
+      reset();
+      onAdded();
+    } catch (err) {
+      toast.error('Could not split that bill', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="udhaar-add-btn is-split" onClick={() => setOpen(true)}>
+        <Icon name="user" size={18} />
+        Chai Split
+      </button>
+    );
+  }
+
+  return (
+    <form className="udhaar-form" onSubmit={submit}>
+      <div className="udhaar-fields">
+        <input
+          type="number"
+          inputMode="decimal"
+          min="0.01"
+          step="0.01"
+          placeholder="Bill total"
+          value={total}
+          onChange={(e) => setTotal(e.target.value)}
+          required
+        />
+        <input placeholder="What was it? (optional)" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
+      </div>
+      <div className="udhaar-split-friends">
+        {friends.map((f, i) => (
+          <div className="udhaar-split-row" key={i}>
+            <input placeholder={`Friend ${i + 1} name`} value={f.name} onChange={(e) => updateFriend(i, 'name', e.target.value)} maxLength={60} />
+            <input placeholder="Phone (optional)" value={f.phone} onChange={(e) => updateFriend(i, 'phone', e.target.value)} maxLength={20} />
+            {friends.length > 1 ? (
+              <button type="button" className="udhaar-mini is-danger" onClick={() => removeFriend(i)} aria-label="Remove friend">
+                <Icon name="x" size={14} />
+              </button>
+            ) : null}
+          </div>
+        ))}
+        <button type="button" className="udhaar-split-add" onClick={addFriend}>
+          <Icon name="plus" size={14} /> Add another friend
+        </button>
+      </div>
+      {share ? (
+        <p className="udhaar-split-share">
+          {diners} people &middot; {money(share, currency)} each
+        </p>
+      ) : null}
+      <div className="udhaar-form-actions">
+        <button type="button" className="btn btn-ghost" onClick={reset}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Splitting…' : 'Split the bill'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function PersonCard({ group, currency, onChange }) {
   const toast = useToast();
   const theyOweMe = group.net > 0;
@@ -198,7 +304,10 @@ export default function Udhaar() {
         </div>
       </div>
 
-      <AddForm onAdded={load} />
+      <div className="udhaar-actions-row">
+        <AddForm onAdded={load} />
+        <SplitForm onAdded={load} currency={currency} />
+      </div>
 
       {!data ? (
         <div className="skeleton" style={{ height: 120, marginTop: '1rem' }} />

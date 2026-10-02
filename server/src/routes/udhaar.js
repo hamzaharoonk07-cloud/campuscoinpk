@@ -65,6 +65,47 @@ router.post(
   })
 );
 
+/**
+ * Chai Split — one bill, paid by the student, divided among friends. Writes
+ * one 'owed_to_me' udhaar row per friend for their share; reuses the same
+ * model and the same per-person totals above rather than a parallel feature,
+ * since splitting a bill is just several debts created at once.
+ */
+router.post(
+  '/split',
+  wrap(async (req, res) => {
+    const { totalAmount, people, note, date } = req.body;
+    const total = Number(totalAmount);
+    if (!(total > 0)) return res.status(400).json({ message: 'Enter the bill total' });
+
+    const names = (Array.isArray(people) ? people : [])
+      .map((p) => ({ name: String(p?.name || '').trim(), phone: String(p?.phone || '').trim() }))
+      .filter((p) => p.name);
+    if (!names.length) return res.status(400).json({ message: 'Add at least one friend to split with' });
+
+    // The student's own share stays off the ledger - udhaar only tracks what
+    // other people owe, not what someone already paid for themselves - so the
+    // bill splits across everyone at the table, friends included.
+    const diners = names.length + 1;
+    const share = Math.round((total / diners) * 100) / 100;
+    const when = date ? new Date(date) : new Date();
+    const billNote = note ? `Chai split: ${note}` : `Chai split, ${diners} people`;
+
+    const entries = await Udhaar.insertMany(
+      names.map((p) => ({
+        user: req.user._id,
+        person: p.name,
+        phone: p.phone,
+        amount: share,
+        direction: 'owed_to_me',
+        note: billNote,
+        date: when,
+      }))
+    );
+    res.status(201).json({ entries, share, diners });
+  })
+);
+
 /** Marks one udhaar as paid back. Kept, not deleted, so the history stays. */
 router.patch(
   '/:id/settle',
