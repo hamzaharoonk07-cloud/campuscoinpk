@@ -21,8 +21,12 @@ const INCOME_CUES = [
   'refund', 'cashback', 'bonus', 'received', 'recieved', 'earned',
   'mila', 'mili', 'milay', 'mili', 'milgaye', 'gaye', // "mil gaye / paise mile"
   'aya', 'aaya', 'ayi', 'aayi', 'aye', 'bheja', 'bheje', 'diye', 'diya', 'di',
-  'kamaya', 'kamaye', 'kamai', 'wapas', 'wapis', 'jeeb', 'kharcha', 'pocket',
+  'kamaya', 'kamaye', 'kamai', 'wapas', 'wapis', 'jeeb', 'pocket',
   'tuition', 'freelance', 'fiverr', 'upwork',
+  // Whoever is handing the money over, and the two words for a cash gift -
+  // 'kharcha' ("expense") used to sit in this list too, which biased a plain
+  // expense phrase like "ghar ka kharcha 2000" toward income; dropped.
+  'ammi', 'abbu', 'abu', 'ami', 'walid', 'walida', 'papa', 'mama', 'eidi', 'salami',
 ];
 
 // Roman Urdu number words, used only when the phrase has no digits at all.

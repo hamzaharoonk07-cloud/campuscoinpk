@@ -5,11 +5,14 @@
 
 export const DEFAULT_CATEGORIES = [
   // Income
-  { name: 'Allowance', type: 'income', icon: 'wallet', slot: 1, keywords: ['allowance', 'pocket', 'money', 'parents', 'home', 'monthly'] },
-  { name: 'Part-time Job', type: 'income', icon: 'briefcase', slot: 2, keywords: ['salary', 'wage', 'shift', 'job', 'work', 'freelance', 'gig', 'tutoring', 'tuition'] },
-  { name: 'Scholarship', type: 'income', icon: 'award', slot: 3, keywords: ['scholarship', 'stipend', 'grant', 'bursary', 'merit', 'aid'] },
-  { name: 'Gift', type: 'income', icon: 'gift', slot: 4, keywords: ['gift', 'eidi', 'birthday', 'present', 'bonus'] },
-  { name: 'Other Income', type: 'income', icon: 'plus-circle', slot: 5, keywords: ['refund', 'cashback', 'sold', 'return', 'misc'] },
+  // 'ghar' and 'kharcha' were tried here and dropped: 'kharcha' literally means
+  // "expense" in Urdu, and both appear at least as often in an expense phrase
+  // ("ghar ka bill") as an income one, so neither is a safe category signal.
+  { name: 'Allowance', type: 'income', icon: 'wallet', slot: 1, keywords: ['allowance', 'pocket', 'money', 'parents', 'home', 'monthly', 'ammi', 'abbu', 'abu', 'ami', 'walid', 'walida', 'papa', 'mama'] },
+  { name: 'Part-time Job', type: 'income', icon: 'briefcase', slot: 2, keywords: ['salary', 'wage', 'shift', 'job', 'work', 'freelance', 'gig', 'tutoring', 'tuition', 'kamaya', 'kamaye', 'kamai'] },
+  { name: 'Scholarship', type: 'income', icon: 'award', slot: 3, keywords: ['scholarship', 'stipend', 'grant', 'bursary', 'merit', 'aid', 'wazifa', 'wazeefa'] },
+  { name: 'Gift', type: 'income', icon: 'gift', slot: 4, keywords: ['gift', 'eidi', 'eid', 'salami', 'birthday', 'present', 'bonus'] },
+  { name: 'Other Income', type: 'income', icon: 'plus-circle', slot: 5, keywords: ['refund', 'cashback', 'sold', 'return', 'misc', 'wapas', 'wapis'] },
 
   // Expenses
   { name: 'Food', type: 'expense', icon: 'utensils', slot: 1, keywords: ['food', 'lunch', 'dinner', 'breakfast', 'canteen', 'cafe', 'cafeteria', 'mess', 'snack', 'tea', 'coffee', 'biryani', 'burger', 'pizza', 'restaurant', 'foodpanda', 'delivery', 'groceries', 'grocery', 'chai', 'paratha', 'samosa', 'roti', 'naan', 'dhaba', 'shawarma', 'sandwich', 'fries', 'juice', 'kebab', 'bakery', 'nashta', 'khana'] },
