@@ -188,29 +188,42 @@ export function AuthProvider({ children }) {
       currency: user?.currency || 'PKR',
       async login(email, password, { admin = false } = {}) {
         const data = await api.post(admin ? '/auth/admin/login' : '/auth/login', { email, password });
-        // The password was right, but this account also wants a code from
-        // its inbox - no token yet, the caller (Login.jsx) asks for it next.
-        if (data.twoFactorRequired) return { twoFactorRequired: true, userId: data.userId };
+        // The password was right, but this account never finished verifying
+        // its email at sign-up - no token yet, the caller (Login.jsx) collects
+        // the code next.
+        if (data.verifyRequired) return { verifyRequired: true, userId: data.userId };
         setToken(data.token);
         adopt(data.user);
         // The next page shows a short welcome (components/WelcomeBack.jsx).
         if (!admin) greetNext({ kind: 'back', since: data.previousLoginAt });
         return data.user;
       },
-      async verifyTwoFactor(userId, code) {
-        const data = await api.post('/auth/login/verify-2fa', { userId, code });
+      async verifyEmail(userId, code, { isNew = false } = {}) {
+        const data = await api.post('/auth/verify-email', { userId, code });
         setToken(data.token);
         adopt(data.user);
-        greetNext({ kind: 'back' });
+        greetNext({ kind: isNew ? 'new' : 'back' });
+        if (isNew) {
+          // The feature tour shows once, the first time a brand-new verified
+          // account opens the app (components/FeatureGuide.jsx).
+          try {
+            localStorage.setItem('campuscoin.tour', '1');
+          } catch {
+            /* private mode - the tour just never shows, not worth breaking on */
+          }
+        }
         return data.user;
       },
       async register(payload) {
         const data = await api.post('/auth/register', payload);
+        // A real email address must confirm a code before the account is
+        // active - no token yet; Register.jsx collects it, then verifyEmail
+        // finishes sign-up. (A demo/undeliverable address skips straight to a
+        // token, same as before.)
+        if (data.verifyRequired) return { verifyRequired: true, userId: data.userId };
         setToken(data.token);
         adopt(data.user);
         greetNext({ kind: 'new' });
-        // Shows the step-by-step feature tour (components/FeatureGuide.jsx)
-        // once, the first time this brand-new account opens the app.
         try {
           localStorage.setItem('campuscoin.tour', '1');
         } catch {

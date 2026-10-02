@@ -151,13 +151,26 @@ router.post(
       avatarColor: PALETTE[Math.floor(Math.random() * PALETTE.length)],
       // Students always register as students; the admin account is seeded.
       role: 'student',
+      // Verified once, now, by a code to this address - unless the address
+      // cannot receive one (a mail outage, or the reserved @campuscoin.app
+      // test domain), in which case there is nothing to verify against.
+      emailVerified: !(mailConfigured() && !/@campuscoin\.app$/i.test(String(email))),
     });
     await user.setPassword(password);
     await user.save();
 
+    const first = String(name).trim().split(' ')[0];
+
+    // Email verification: one code, now, at sign-up. No token yet - the
+    // account exists but the client must confirm the code first
+    // (POST /auth/verify-email), which is what issues the token.
+    if (!user.emailVerified) {
+      await sendTwoFactorCode(user, { verb: 'verify your email and finish signing up' });
+      return res.status(201).json({ verifyRequired: true, userId: user._id });
+    }
+
     // A welcome, sent without waiting so a slow mail server never holds up
     // sign-up. (Nothing is sent to the made-up campuscoin.app test addresses.)
-    const first = String(name).trim().split(' ')[0];
     sendMail({
       to: user.email,
       subject: `Welcome to Campus Coin, ${first}`,
@@ -283,25 +296,28 @@ router.post(
   wrap(async (req, res) => {
     const user = await checkSignIn(req, res);
     if (!user) return;
-    // The password was already right - the emailed code is a second, separate
-    // proof (the inbox), and it is now required of every sign-in, not opt-in.
-    // The one exception is an address that cannot actually receive it: the
-    // shared demo/seed accounts live on the made-up @campuscoin.app domain,
-    // and a mail outage must not lock everyone out - in both cases we fall
-    // back to signing in on the password alone rather than stranding them on
-    // a code screen no code will ever reach.
+    // Email is verified once, at sign-up. If an account was created but never
+    // finished that step (closed the tab on the code screen), it is caught
+    // here on the next sign-in - but only then; a verified account is never
+    // asked again. `=== false` on purpose: accounts that predate this field
+    // read as undefined and are left alone, and the demo/seed accounts (which
+    // cannot receive mail) are exempt too.
     const canReceiveCode = mailConfigured() && !/@campuscoin\.app$/i.test(user.email);
-    if (canReceiveCode) {
-      await sendTwoFactorCode(user, { verb: 'finish signing in' });
-      return res.json({ twoFactorRequired: true, userId: user._id });
+    if (user.emailVerified === false && canReceiveCode) {
+      await sendTwoFactorCode(user, { verb: 'verify your email' });
+      return res.json({ verifyRequired: true, userId: user._id });
     }
     res.json({ token: signToken(user), user: publicUser(user), previousLoginAt: user.$locals.previousLoginAt });
   })
 );
 
-/** The second step of signing in when two-step verification is on. */
+/**
+ * Confirms the sign-up email code, marks the address verified for good, and
+ * issues the token. Reached from both the registration code screen and the
+ * one-time catch at the next login if sign-up was abandoned on that screen.
+ */
 router.post(
-  '/login/verify-2fa',
+  '/verify-email',
   wrap(async (req, res) => {
     const { userId, code } = req.body;
     const user = await User.findById(userId).select('+twoFactorCodeHash +twoFactorCodeExpires');
@@ -309,6 +325,7 @@ router.post(
       if (user) await user.save();
       return res.status(401).json({ message: 'That code is wrong or has expired' });
     }
+    user.emailVerified = true;
     user.lastLoginAt = new Date();
     await user.save();
     res.json({ token: signToken(user), user: publicUser(user) });

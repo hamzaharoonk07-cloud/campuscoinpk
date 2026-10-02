@@ -185,15 +185,15 @@ export function IconField({ id, label, icon, type = 'text', aside, ...input }) {
 const DEMO = { email: 'student@campuscoin.app', password: 'Student@12345' };
 
 export default function Login() {
-  const { login, verifyTwoFactor } = useAuth();
+  const { login, verifyEmail } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  // Set once the password checks out on an account with two-step
-  // verification on - swaps the form below for a single code field.
-  const [twoFactor, setTwoFactor] = useState(null); // { userId }
+  // Set when an account that never verified its email at sign-up tries to
+  // log in - swaps the form below for a single code field, one time.
+  const [verify, setVerify] = useState(null); // { userId }
   const [code, setCode] = useState('');
 
   const signIn = async (credentials) => {
@@ -201,8 +201,8 @@ export default function Login() {
     setError('');
     try {
       const result = await login(credentials.email, credentials.password);
-      if (result?.twoFactorRequired) {
-        setTwoFactor({ userId: result.userId });
+      if (result?.verifyRequired) {
+        setVerify({ userId: result.userId });
         return;
       }
       navigate(location.state?.from || '/dashboard', { replace: true });
@@ -223,7 +223,7 @@ export default function Login() {
     setBusy(true);
     setError('');
     try {
-      await verifyTwoFactor(twoFactor.userId, code.trim());
+      await verifyEmail(verify.userId, code.trim());
       navigate(location.state?.from || '/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -254,7 +254,7 @@ export default function Login() {
         {/* On a phone this wrapper becomes the sheet, so the fine print sits on
             it rather than stranded on the dark below a card that stops short. */}
         <div className="auth-sheet">
-        {twoFactor ? (
+        {verify ? (
           <form className="auth-form" onSubmit={submitCode}>
             <div className="auth-head">
               <h1>Enter your code</h1>
@@ -280,7 +280,7 @@ export default function Login() {
               {busy ? 'Checking' : 'Continue'}
             </button>
 
-            <button type="button" className="btn btn-block" onClick={() => setTwoFactor(null)} disabled={busy}>
+            <button type="button" className="btn btn-block" onClick={() => setVerify(null)} disabled={busy}>
               Back to sign in
             </button>
           </form>
@@ -336,10 +336,10 @@ export default function Login() {
         </form>
         )}
 
-        {!twoFactor ? <GoogleSignInButton /> : null}
+        {!verify ? <GoogleSignInButton /> : null}
 
         {/* Fills what was empty dark ground above and below a card this short. */}
-        {!twoFactor ? <AuthFeed /> : null}
+        {!verify ? <AuthFeed /> : null}
 
         {/* Out of the card: neither is part of signing in. */}
         <p className="auth-fine">

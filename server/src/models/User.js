@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
     // the client blocks the app until those are filled in once, the same way
     // the ordinary signup form already asks for them up front.
     profileComplete: { type: Boolean, default: true },
+    // Confirmed once, at sign-up, by a code emailed to this address. A Google
+    // sign-up is already verified by Google, and the seeded/demo accounts are
+    // created verified; only a normal email/password sign-up starts false.
+    emailVerified: { type: Boolean, default: true },
 
     // Profile fields from the SRS (section 1.6, "User Authentication and Management")
     // School, college, university or postgraduate year (utils/study.js).

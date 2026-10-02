@@ -235,21 +235,21 @@ function WebhookKey() {
 }
 
 /**
- * Two-step verification is now mandatory for every account, so this is no
- * longer a toggle - just a note explaining the code that gets emailed at
- * each sign-in. (The shared demo accounts on @campuscoin.app can't receive
- * email, so the server signs those in on the password alone.)
+ * Email verification note. Verification happens once, at sign-up (a code to
+ * the address), not on every sign-in - this just confirms the state. The
+ * shared demo accounts on @campuscoin.app have no real inbox, so they are
+ * created already verified.
  */
 function TwoFactorToggle() {
   const { user } = useAuth();
   return (
     <div className="security-row">
       <span>
-        <strong>Two-step verification is on</strong>
+        <strong>Email {user.isDemo ? 'verification' : 'verified'}</strong>
         <small>
           {user.isDemo
-            ? 'This shared demo account signs in with its password alone, since it has no real inbox for a code.'
-            : `For your security, a 6-digit code is emailed to ${user.email} each time you sign in. This is always on.`}
+            ? 'This shared demo account has no real inbox, so it skips email verification.'
+            : `${user.email} was verified by a code when you signed up. You will not be asked again.`}
         </small>
       </span>
     </div>

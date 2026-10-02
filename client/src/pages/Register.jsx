@@ -11,7 +11,7 @@ import { useAuth } from '../context/AppContext.jsx';
 
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, verifyEmail } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
@@ -27,6 +27,10 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Set once the account is created but the emailed code is still needed -
+  // swaps the form for a single code field to finish signing up.
+  const [verify, setVerify] = useState(null); // { userId }
+  const [code, setCode] = useState('');
 
   const set = (key) => (event) => setForm({ ...form, [key]: event.target.value });
 
@@ -44,11 +48,29 @@ export default function Register() {
     setError('');
     try {
       const { confirm, ...details } = form;
-      await register({
+      const result = await register({
         ...details,
         monthlyAllowance: Number(form.monthlyAllowance) || 0,
         savingsGoal: Number(form.savingsGoal) || 0,
       });
+      if (result?.verifyRequired) {
+        setVerify({ userId: result.userId });
+        return;
+      }
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitCode = async (event) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      await verifyEmail(verify.userId, code.trim(), { isNew: true });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -75,6 +97,37 @@ export default function Register() {
         </AuthTop>
         {/* On a phone this becomes the white sheet, as on sign-in. */}
         <div className="auth-sheet">
+        {verify ? (
+          <form className="auth-form" onSubmit={submitCode}>
+            <div className="auth-head">
+              <span className="auth-mark">
+                <BrandMark size={36} />
+              </span>
+              <span className="eyebrow">Almost there</span>
+              <h1>Verify your email</h1>
+              <p>We emailed a 6-digit code to {form.email}. Enter it to finish signing up.</p>
+            </div>
+            {error ? <div className="form-error">{error}</div> : null}
+            <IconField
+              id="code"
+              label="Verification code"
+              icon="key"
+              inputMode="numeric"
+              placeholder="000000"
+              autoComplete="one-time-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            <button className="btn btn-primary btn-block btn-lg" type="submit" disabled={busy}>
+              {busy ? <span className="spinner" /> : null}
+              {busy ? 'Checking' : 'Verify and continue'}
+            </button>
+            <p className="small muted" style={{ textAlign: 'center' }}>
+              No code? Check your spam folder - it can take a minute to arrive.
+            </p>
+          </form>
+        ) : (
         <form className="auth-form" onSubmit={submit}>
           <div className="auth-head">
             <span className="auth-mark">
@@ -185,8 +238,9 @@ export default function Register() {
             Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </form>
+        )}
 
-        <GoogleSignInButton />
+        {!verify ? <GoogleSignInButton /> : null}
         </div>
       </div>
     </div>
