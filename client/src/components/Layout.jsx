@@ -282,7 +282,9 @@ function ChatLauncher() {
     } catch {
       /* private mode: skip the hint */
     }
-    if (seen) return undefined;
+    // On phones the hint bubble collides with the dashboard cards, so only the
+    // button shows there; the hint is a desktop-only nicety.
+    if (seen || (typeof window !== 'undefined' && window.innerWidth <= 760)) return undefined;
     const show = setTimeout(() => setHint(true), 2200);
     const hide = setTimeout(() => setHint(false), 9000);
     return () => {

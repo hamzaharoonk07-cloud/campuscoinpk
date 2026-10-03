@@ -224,9 +224,11 @@
 
 /* --- Join (step 5, the ways in) ------------------------------------------ */
 .wl-join { justify-content: center; text-align: center; gap: 10px; }
-.wl-google { display: block; min-width: 0; }
-.wl-google .google-signin-card { width: 100%; padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
-.wl-google .google-signin { width: 100%; }
+/* Wrap Google's shorter button in a white pill so it matches the height/shape of
+   the other CTAs for a consistent pair. */
+.wl-google { display: flex; align-items: center; justify-content: center; min-width: 0; height: 56px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.wl-google .google-signin-card { width: 100%; padding: 0 !important; margin: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; display: flex; justify-content: center; }
+.wl-google .google-signin { width: 100%; display: flex; justify-content: center; }
 .wl-google iframe { margin: 0 auto !important; }
 
 /* On short screens, drop the secondary "This week" card so the main budget card
