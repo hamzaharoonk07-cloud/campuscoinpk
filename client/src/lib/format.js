@@ -1,10 +1,12 @@
 export const CURRENCY_SYMBOLS = {
-  PKR: 'Rs',
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  INR: '₹',
-  AED: 'AED',
+  PKR: 'Rs', USD: '$', EUR: '€', GBP: '£', INR: '₹', AED: 'AED',
+  SAR: 'SAR', QAR: 'QAR', KWD: 'KD', BHD: 'BD', OMR: 'OMR', JOD: 'JD',
+  JPY: '¥', CNY: '¥', HKD: 'HK$', SGD: 'S$', KRW: '₩', MYR: 'RM', THB: '฿',
+  IDR: 'Rp', PHP: '₱', VND: '₫', BDT: '৳', LKR: 'Rs', NPR: 'Rs', AFN: '؋',
+  AUD: 'A$', CAD: 'C$', NZD: 'NZ$', CHF: 'CHF', SEK: 'kr', NOK: 'kr', DKK: 'kr',
+  PLN: 'zł', CZK: 'Kč', HUF: 'Ft', RON: 'lei', TRY: '₺', RUB: '₽', UAH: '₴',
+  ZAR: 'R', NGN: '₦', KES: 'KSh', GHS: '₵', EGP: 'E£', MAD: 'MAD', TZS: 'TSh',
+  UGX: 'USh', BRL: 'R$', MXN: 'MX$', ARS: 'AR$', CLP: 'CLP', COP: 'COP',
 };
 
 /**

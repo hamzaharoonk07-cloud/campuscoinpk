@@ -39,7 +39,17 @@ const userSchema = new mongoose.Schema(
     institution: { type: String, trim: true, maxlength: 120, default: '' },
     monthlyAllowance: { type: Number, default: 0, min: 0 },
     savingsGoal: { type: Number, default: 0, min: 0 },
-    currency: { type: String, enum: ['PKR', 'USD', 'EUR', 'GBP', 'INR', 'AED'], default: 'PKR' },
+    currency: {
+      type: String,
+      enum: [
+        'PKR', 'USD', 'EUR', 'GBP', 'INR', 'AED', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'JOD',
+        'JPY', 'CNY', 'HKD', 'SGD', 'KRW', 'MYR', 'THB', 'IDR', 'PHP', 'VND', 'BDT', 'LKR',
+        'NPR', 'AFN', 'AUD', 'CAD', 'NZD', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF',
+        'RON', 'TRY', 'RUB', 'UAH', 'ZAR', 'NGN', 'KES', 'GHS', 'EGP', 'MAD', 'TZS', 'UGX',
+        'BRL', 'MXN', 'ARS', 'CLP', 'COP',
+      ],
+      default: 'PKR',
+    },
     avatarColor: { type: String, default: '#121214' },
     // The student's own contact number, required of every account (even one
     // created before this was added, and even a Google sign-in, which gives

@@ -738,9 +738,21 @@ export default function Settings() {
           <section className="panel" id="webhook">
             <div className="panel-head">
               <h2>Log transactions from bank SMS automatically</h2>
-              <span className="panel-note">One tap, in the app</span>
+              <span className="panel-note">Coming soon</span>
             </div>
             <div className="panel-body">
+              <div className="security-row">
+                <span>
+                  <strong>Automatic bank-SMS logging <em style={{ color: 'var(--good)', fontStyle: 'normal' }}>· Coming soon</em></strong>
+                  <small>
+                    Soon Campus Coin will read your bank&rsquo;s transaction alerts and log them for you automatically -
+                    no typing. We&rsquo;re putting the finishing touches on it.
+                  </small>
+                </span>
+                <span className="badge" aria-hidden="true">
+                  <Icon name="bell" size={16} />
+                </span>
+              </div>
               <NativeSmsSetup />
             </div>
           </section>

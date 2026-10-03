@@ -3507,8 +3507,6 @@ body.modal-open .chat-hint { display: none !important; }
 /* Stop continuous/decorative animations (welcome orbit, 3D coin, pulses, scene). */
 .is-app .wl-orbit,
 .is-app .wl-counter,
-.is-app .wl-coin3d,
-.is-app .wl-coinwrap,
 .is-app .wl-pulse,
 .is-app .wl-halo::before,
 .is-app .d9-scene-rays,
