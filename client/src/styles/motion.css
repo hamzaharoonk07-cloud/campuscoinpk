@@ -404,7 +404,16 @@
 }
 
 /* ---- App-wide page transitions + staggered entrances --------------------- */
-.page-anim { animation: page-in 0.4s var(--ease-out) both; }
+/* This wraps all page content for the route transition. It must re-create the
+   parent .page flex column + gap, otherwise every section loses its spacing and
+   they overlap (e.g. the dashboard banner touching its neighbours). */
+.page-anim {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  min-width: 0;
+  animation: page-in 0.4s var(--ease-out) both;
+}
 @keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
 
 /* Direct blocks of each page cascade in. Only transform/opacity, so it stays 60fps. */
