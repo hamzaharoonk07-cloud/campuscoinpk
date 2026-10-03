@@ -227,6 +227,12 @@
 .wl-google .google-signin { width: 100%; }
 .wl-google iframe { margin: 0 auto !important; }
 
+/* On short screens, drop the secondary "This week" card so the main budget card
+   still fits fullscreen without clipping. */
+@media (max-height: 780px) {
+  .wl-week { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wl *, .wl *::before, .wl *::after { animation: none !important; transition: none !important; }
   .wl-intro { display: none; }
