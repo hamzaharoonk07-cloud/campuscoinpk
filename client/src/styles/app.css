@@ -1161,13 +1161,15 @@ body.modal-open .chat-hint { display: none !important; }
   border-radius: var(--r-panel-lg);
   box-shadow: var(--shadow-3), var(--edge-strong);
   width: min(560px, 100%);
-  /* dvh, not vh: on phones vh counts the area behind the browser's address
-     bar, so a 90vh modal runs below the fold and its sticky Add button hides
-     under the browser chrome. dvh measures the actually-visible height. The vh
-     line is a fallback for the few engines without dvh. */
+  /* Flex column: head fixed, body scrolls, footer (Cancel/Add) pinned - so the
+     Add button is ALWAYS visible however tall the form is (it was getting
+     clipped inside the WebView when the whole modal was one scroll area).
+     dvh, not vh: on phones vh counts the area behind the browser/app chrome. */
   max-height: 90vh;
   max-height: 90dvh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   animation: rise 0.22s var(--ease-out);
 }
 
@@ -1195,6 +1197,10 @@ body.modal-open .chat-hint { display: none !important; }
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  /* This is the scroll area now; the sticky footer below pins to its bottom. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .modal-actions {
