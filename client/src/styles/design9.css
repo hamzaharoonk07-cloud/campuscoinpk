@@ -310,18 +310,27 @@ textarea:focus { border-color: var(--text); box-shadow: none; background: var(--
   .d9-top > * { grid-column: auto; }
 }
 
+/* Icon on the left (spanning both lines), title on top, body wrapping beneath.
+   A flex row let a short title and body share one line and read as a run-on
+   ("Campus Coin Launching Soon"), and long bodies squeezed the banner to a thin
+   collapsed strip - a 2-column grid keeps the title and body on their own lines
+   at any length. */
 .d9-notice {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.65rem;
+  row-gap: 0.12rem;
   align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  padding: 0.8rem 1.1rem;
+  padding: 0.85rem 1.05rem;
   border-radius: 16px;
+  border-left: 3px solid var(--blue-deep);
   background: var(--blue-soft);
   font-size: 0.9rem;
 }
-.d9-notice svg { color: var(--blue-deep); }
-.d9-notice span { color: var(--muted); }
+.d9-notice > svg,
+.d9-notice > .d9-season-emoji { grid-row: 1 / span 2; align-self: center; color: var(--blue-deep); }
+.d9-notice > strong { grid-column: 2; line-height: 1.25; }
+.d9-notice > span:not(.d9-season-emoji) { grid-column: 2; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; color: var(--muted); }
 .d9-season-emoji { font-size: 1.1rem; line-height: 1; }
 
 .d9-card {
