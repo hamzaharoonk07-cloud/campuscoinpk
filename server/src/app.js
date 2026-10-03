@@ -18,6 +18,9 @@ import notificationRoutes from './routes/notifications.js';
 import aiRoutes from './routes/ai.js';
 import adminRoutes from './routes/admin.js';
 import webhookRoutes from './routes/webhook.js';
+import pushRoutes from './routes/push.js';
+
+import { sendDailyReminders } from './services/push.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -38,7 +41,10 @@ app.get('/api/cron/daily', async (req, res, next) => {
   }
   try {
     const created = await runRecurring();
-    res.json({ ok: true, created: created.length });
+    // Same daily pass sends the "log your spending" push nudge to everyone who
+    // has notifications on. A failure here must not fail the recurring run.
+    const reminded = await sendDailyReminders().catch(() => 0);
+    res.json({ ok: true, created: created.length, reminded });
   } catch (err) {
     next(err);
   }
@@ -58,6 +64,7 @@ app.use('/api/admin', adminRoutes);
 // No protect() here - the caller is a phone-side forwarder, not a signed-in
 // browser; routes/webhook.js checks the per-account key itself.
 app.use('/api/webhook', webhookRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
 
 // Locally the built React app is served by Express. On Vercel the static files

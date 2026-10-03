@@ -10,6 +10,7 @@ import { CURRENCY_SYMBOLS, formatDate } from '../lib/format.js';
 import { StudyOptions, studyLabel } from '../lib/study.jsx';
 import { useAuth, useTheme, useToast } from '../context/AppContext.jsx';
 import { isNative, smsStatus, smsRequestPermission, smsConfigure, smsSetEnabled } from '../lib/smsForwarder.js';
+import { pushSupported, pushStatus, enablePush, disablePush, sendTestPush } from '../lib/push.js';
 import { startFeatureTour } from '../components/FeatureGuide.jsx';
 
 const SCALES = [
@@ -101,6 +102,78 @@ function NativeSmsSetup() {
       <button type="button" className="btn btn-primary btn-sm" onClick={setUp} disabled={busy}>
         {busy ? 'Setting up…' : 'Turn on'}
       </button>
+    </div>
+  );
+}
+
+/**
+ * Push notifications toggle. Turns on budget alerts and the daily "log your
+ * spending" nudge as system notifications, so they arrive with the app closed.
+ * Only shown where the browser actually supports it (installed app / TWA, modern
+ * mobile and desktop browsers).
+ */
+function PushNotifications() {
+  const toast = useToast();
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (pushSupported()) pushStatus().then(setState).catch(() => {});
+    else setState({ supported: false });
+  }, []);
+
+  if (state && !state.supported) return null;
+
+  const turnOn = async () => {
+    setBusy(true);
+    try {
+      await enablePush();
+      setState({ supported: true, subscribed: true, permission: 'granted' });
+      await sendTestPush().catch(() => {});
+      toast.success('Notifications on', 'We sent a test one to this device.');
+    } catch (err) {
+      toast.error('Could not turn these on', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const turnOff = async () => {
+    setBusy(true);
+    try {
+      await disablePush();
+      setState({ supported: true, subscribed: false, permission: Notification.permission });
+      toast.success('Notifications off for this device');
+    } catch (err) {
+      toast.error('Could not turn these off', err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const blocked = state?.permission === 'denied';
+
+  return (
+    <div className="security-row">
+      <span>
+        <strong>Push notifications</strong>
+        <small>
+          {state?.subscribed
+            ? 'On for this device - budget alerts and a daily reminder to log your spending.'
+            : blocked
+              ? 'Blocked in your browser. Allow notifications for this app in site settings, then try again.'
+              : 'Get budget alerts and a daily reminder, even with the app closed. Turns on for this device.'}
+        </small>
+      </span>
+      {state?.subscribed ? (
+        <button type="button" className="btn btn-sm" onClick={turnOff} disabled={busy}>
+          Turn off
+        </button>
+      ) : (
+        <button type="button" className="btn btn-primary btn-sm" onClick={turnOn} disabled={busy || blocked}>
+          {busy ? 'Turning on…' : 'Turn on'}
+        </button>
+      )}
     </div>
   );
 }
@@ -580,6 +653,8 @@ export default function Settings() {
                 />
                 Tell me when a budget is close or broken
               </label>
+
+              <PushNotifications />
             </div>
           </section>
 

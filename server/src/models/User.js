@@ -90,6 +90,24 @@ const userSchema = new mongoose.Schema(
     // something the webhook route checks against the sender.
     webhookPhone: { type: String, trim: true, maxlength: 20, default: '' },
 
+    // Web Push subscriptions (Push API). One entry per browser/device the
+    // student has turned notifications on for - the same account on a phone and
+    // a laptop keeps two. Each is the raw PushSubscription the browser hands us
+    // (endpoint + the p256dh/auth keys web-push signs with); a dead one (the
+    // browser returns 404/410) is pruned the next time we try to send to it.
+    // Never sent to the client - publicUser exposes only whether any exist.
+    pushSubscriptions: {
+      type: [
+        {
+          endpoint: { type: String, required: true },
+          keys: { p256dh: String, auth: String },
+          _id: false,
+        },
+      ],
+      default: [],
+      select: false,
+    },
+
     // Sessions. Every sign-in token carries this number; raising it (on a new
     // password, or "sign out everywhere") makes every older token invalid.
     tokenVersion: { type: Number, default: 0 },

@@ -1,6 +1,7 @@
 import Budget from '../models/Budget.js';
 import Notification from '../models/Notification.js';
 import { byCategory } from './analytics.js';
+import { sendToUser } from './push.js';
 import { startOfMonth } from '../utils/dates.js';
 import { formatMoney, round2 } from '../utils/money.js';
 
@@ -59,6 +60,15 @@ export async function checkBudgets(user, month) {
     budget.alertedAt = level;
     await budget.save();
     raised.push(notification);
+
+    // Mirror the in-app alert to a system push, so the student sees it even with
+    // the app closed. Fire-and-forget: a push failure never blocks the save.
+    sendToUser(user._id, {
+      title: notification.title,
+      body: notification.body,
+      link: notification.link || '/budgets',
+      tag: `budget-${budget.category._id}`,
+    }).catch(() => {});
   }
 
   return raised;

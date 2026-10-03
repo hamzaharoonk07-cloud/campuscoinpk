@@ -9,7 +9,7 @@
    stale budget data would be worse than an offline message). We never cache
    /api/* responses. */
 
-const CACHE = 'campuscoin-v1';
+const CACHE = 'campuscoin-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -26,6 +26,47 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+});
+
+/* Web Push: show a system notification when the server sends one, even with the
+   app closed. The payload is the JSON the server's push.js puts together. */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: 'Campus Coin', body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'Campus Coin';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: data.tag || 'campuscoin',
+      renotify: true,
+      data: { link: data.link || '/dashboard' },
+    })
+  );
+});
+
+/* Tapping a notification focuses an open tab (routing it to the link) or opens a
+   new one. */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const link = (event.notification.data && event.notification.data.link) || '/dashboard';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) client.navigate(link).catch(() => {});
+          return undefined;
+        }
+      }
+      return self.clients.openWindow ? self.clients.openWindow(link) : undefined;
+    })
+  );
 });
 
 self.addEventListener('fetch', (event) => {

@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb-memory-server": "^10.1.4",
     "mongoose": "^8.9.5",
-    "nodemailer": "^7.0.3"
+    "nodemailer": "^7.0.3",
+    "web-push": "^3.6.7"
   }
 }
