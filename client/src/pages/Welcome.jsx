@@ -17,8 +17,37 @@
    - Reduced motion: everything renders in its finished state.
    Hard-coded (no token fit on this dark surface): bg #09090c, greens/mints/blue/
    amber per welcome.css header. */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+/* Scales a step's content down to fit the screen when it is taller than the
+   viewport, so every step fills the screen with no scroll and nothing cut. */
+function FitStep({ children }) {
+  const wrap = useRef(null);
+  const inner = useRef(null);
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const fit = () => {
+      if (!wrap.current || !inner.current) return;
+      const avail = wrap.current.clientHeight;
+      const natural = inner.current.scrollHeight;
+      setScale(natural > avail + 1 ? Math.max(0.5, avail / natural) : 1);
+    };
+    const raf = requestAnimationFrame(fit);
+    let ro;
+    if (window.ResizeObserver && inner.current) { ro = new ResizeObserver(fit); ro.observe(inner.current); }
+    window.addEventListener('resize', fit);
+    const t = setTimeout(fit, 400); // after entrance animation / fonts
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); ro && ro.disconnect(); window.removeEventListener('resize', fit); };
+  });
+  return (
+    <div className="wl-step" ref={wrap}>
+      <div className="wl-scale" ref={inner} style={{ transform: scale < 1 ? `scale(${scale})` : undefined, transformOrigin: 'top center' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 import GoogleSignInButton from '../components/GoogleSignInButton.jsx';
 import '../styles/welcome.css';
 
@@ -107,7 +136,7 @@ function Hero({ onStart, onLogin, tilt }) {
   const car = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 16V11l2-4h10l2 4v5M5 16h14M5 16v2M19 16v2" /><circle cx="8.5" cy="13.5" r="1" /><circle cx="15.5" cy="13.5" r="1" /></svg>;
   const book = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7" /></svg>;
   return (
-    <div className="wl-step is-enter">
+    <div className="wl-fit is-enter">
       <div className="wl-brandrow wl-up" style={{ animationDelay: '0.1s' }}>
         <div className="wl-brand"><BrandMark size={30} /><b>Campus Coin</b></div>
         <span className="wl-free">Free for students</span>
@@ -148,7 +177,7 @@ function Log({ feat, onNext, onSkip }) {
   const typed = SAMPLE.typed.slice(0, Math.floor(easeOut((t - 0.3) / 1.0) * SAMPLE.typed.length));
   const doneTyping = typed.length >= SAMPLE.typed.length;
   return (
-    <div className="wl-step is-enter">
+    <div className="wl-fit is-enter">
       <TopBar feat={feat} onSkip={onSkip} />
       <div className="wl-art" style={{ marginTop: 18 }}>
         <div className="wl-glass wl-inputcard wl-up">
@@ -196,7 +225,7 @@ function Budget({ feat, onNext, onSkip }) {
   const t = useElapsed('budget');
   const avail = reduced ? 8510 : countTo(8510, t, 0.4, 1.4);
   return (
-    <div className="wl-step is-enter">
+    <div className="wl-fit is-enter">
       <TopBar feat={feat} onSkip={onSkip} />
       <div className="wl-art" style={{ marginTop: 18 }}>
         <div className="wl-glass wl-budget wl-up">
@@ -254,7 +283,7 @@ function Coin({ feat, onNext, onSkip }) {
     ['Per day', countTo(224, statsT, 0.2, 0.9), true],
   ];
   return (
-    <div className="wl-step is-enter">
+    <div className="wl-fit is-enter">
       <TopBar feat={feat} onSkip={onSkip} />
       <div className="wl-art" style={{ marginTop: 18 }}>
         <div className="wl-coinhead wl-up">
@@ -285,7 +314,7 @@ function Coin({ feat, onNext, onSkip }) {
 /* ---- Step 5: join ------------------------------------------------------- */
 function Join({ onPhone, onEmail, onLogin }) {
   return (
-    <div className="wl-step is-enter wl-join">
+    <div className="wl-fit is-enter wl-join">
       <div className="wl-brand" style={{ justifyContent: 'center', marginBottom: 18 }}><BrandMark size={38} /><b style={{ fontSize: 22 }}>Campus Coin</b></div>
       <h2 className="wl-h2" style={{ textAlign: 'center', fontSize: 34 }}>Create your <span className="wl-accentword">account</span></h2>
       <p className="wl-sub" style={{ textAlign: 'center', margin: '8px auto 18px' }}>Pick the way that suits you. It takes seconds.</p>
@@ -351,13 +380,13 @@ export default function Welcome() {
         <div className="wl-vig" />
       </div>
 
-      <div key={step} style={{ display: 'contents' }}>
+      <FitStep key={step}>
         {step === 0 && <Hero onStart={() => go(1)} onLogin={toLogin} tilt={tilt} />}
         {step === 1 && <Log feat={0} onNext={() => go(2)} onSkip={() => go(4)} />}
         {step === 2 && <Budget feat={1} onNext={() => go(3)} onSkip={() => go(4)} />}
         {step === 3 && <Coin feat={2} onNext={() => go(4)} onSkip={() => go(4)} />}
         {step === 4 && <Join onPhone={toPhone} onEmail={toRegister} onLogin={toLogin} />}
-      </div>
+      </FitStep>
 
       {intro ? (
         <div className="wl-intro" onClick={() => setIntro(false)}>
