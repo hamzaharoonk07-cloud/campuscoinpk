@@ -270,3 +270,16 @@
 .wel-btn-ghost { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); margin-top: 8px; }
 .wel-error { background: rgba(239,68,68,0.18); color: #fecaca; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-weight: 500; }
 .wel-note { background: rgba(34,197,94,0.16); color: #bbf7d0; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-weight: 600; }
+
+/* Pinned Campus Coin logo across every welcome step (outside the scroll area so
+   it never scrolls away). */
+.wl-logobar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 6;
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 20px; pointer-events: none;
+}
+.wl-logobar b {
+  font-family: var(--font-display, Geist), sans-serif;
+  font-weight: 700; font-size: 17px; color: #f4f4f5; letter-spacing: -0.2px;
+}
+.wl-step { padding-top: 52px; }

@@ -141,9 +141,15 @@ export default function QuickPhrase({ categories = [], onSaved }) {
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.lang = 'en-PK';
+    // Recognise in the phone's own language (English, Urdu, etc.) so voice entry
+    // works for everyone; fall back to Pakistani English.
+    try {
+      recognition.lang = navigator.language || 'en-PK';
+    } catch {
+      recognition.lang = 'en-PK';
+    }
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    recognition.maxAlternatives = 3;
     recognition.onresult = (event) => {
       const said = event.results[0][0].transcript;
       setPhrase(said);

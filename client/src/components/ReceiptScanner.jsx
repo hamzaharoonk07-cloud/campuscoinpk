@@ -19,6 +19,7 @@ import { formatDate, money } from '../lib/format.js';
  */
 export default function ReceiptScanner({ photo, onPhoto, onRead, currency, savedId, hasSaved }) {
   const input = useRef(null);
+  const uploadInput = useRef(null);
   const [stage, setStage] = useState(photo ? 'found' : 'idle'); // idle | reading | found | failed
   const [progress, setProgress] = useState(0);
   const [preview, setPreview] = useState(photo || '');
@@ -86,15 +87,26 @@ export default function ReceiptScanner({ photo, onPhoto, onRead, currency, saved
   };
 
   const picker = (
-    <input
-      ref={input}
-      type="file"
-      accept="image/*"
-      capture="environment"
-      className="sr-only"
-      tabIndex={-1}
-      onChange={(e) => scan(e.target.files[0])}
-    />
+    <>
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(e) => scan(e.target.files[0])}
+      />
+      {/* No capture = pick an existing image from the gallery/files. */}
+      <input
+        ref={uploadInput}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(e) => scan(e.target.files[0])}
+      />
+    </>
   );
 
   // A saved receipt the student has not opened yet.
@@ -133,7 +145,7 @@ export default function ReceiptScanner({ photo, onPhoto, onRead, currency, saved
         <div className="receipt-drop-copy">
           <strong>Scan a receipt</strong>
           <span>
-            Take a photo or drop one here. Campus Coin reads the total, the shop and the date, all on this device.
+            Take a photo, upload one, or drop it here. Campus Coin reads the total, the shop and the date, all on this device.
           </span>
           {stage === 'failed' ? <span className="receipt-error">{error}</span> : null}
         </div>
@@ -141,6 +153,10 @@ export default function ReceiptScanner({ photo, onPhoto, onRead, currency, saved
           <button type="button" className="btn btn-sm btn-primary" onClick={() => input.current?.click()}>
             <Icon name="camera" size={15} />
             Photo
+          </button>
+          <button type="button" className="btn btn-sm" onClick={() => uploadInput.current?.click()}>
+            <Icon name="upload" size={15} />
+            Upload
           </button>
           <button type="button" className="btn btn-sm btn-ghost" onClick={trySample}>
             Try a sample

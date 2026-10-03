@@ -118,8 +118,7 @@ function Hero({ onStart, onLogin, tilt }) {
   const book = (s) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h7" /></svg>;
   return (
     <div className="wl-fit is-enter">
-      <div className="wl-brandrow wl-up" style={{ animationDelay: '0.1s' }}>
-        <div className="wl-brand"><BrandMark size={30} /><b>Campus Coin</b></div>
+      <div className="wl-brandrow wl-up" style={{ animationDelay: '0.1s', justifyContent: 'flex-end' }}>
         <span className="wl-free">Free for students</span>
       </div>
       <div className="wl-hero" style={{ transform: tilt }}>
@@ -296,8 +295,7 @@ function Coin({ feat, onNext, onSkip }) {
 function Join({ onPhone, onEmail, onLogin }) {
   return (
     <div className="wl-fit is-enter wl-join">
-      <div className="wl-brand" style={{ justifyContent: 'center', marginBottom: 18 }}><BrandMark size={38} /><b style={{ fontSize: 22 }}>Campus Coin</b></div>
-      <h2 className="wl-h2" style={{ textAlign: 'center', fontSize: 34 }}>Create your <span className="wl-accentword">account</span></h2>
+      <h2 className="wl-h2" style={{ textAlign: 'center', fontSize: 34, marginTop: 8 }}>Create your <span className="wl-accentword">account</span></h2>
       <p className="wl-sub" style={{ textAlign: 'center', margin: '8px auto 18px' }}>Pick the way that suits you. It takes seconds.</p>
       <div className="wl-google"><GoogleSignInButton bare shape="pill" /></div>
       <button type="button" className="wl-cta" onClick={() => { haptic(); onEmail(); }}>Sign up with email<span className="wl-shine" /></button>
@@ -360,6 +358,8 @@ export default function Welcome() {
         <svg className="wl-grain" width="390" height="844" aria-hidden="true"><filter id="wlgrain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" /></filter><rect width="390" height="844" filter="url(#wlgrain)" /></svg>
         <div className="wl-vig" />
       </div>
+
+      <div className="wl-logobar"><BrandMark size={24} /><b>Campus Coin</b></div>
 
       <FitStep key={step}>
         {step === 0 && <Hero onStart={() => go(1)} onLogin={toLogin} tilt={tilt} />}
