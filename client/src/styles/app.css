@@ -3462,3 +3462,9 @@ body.modal-open .chat-hint { display: none !important; }
   animation: gsi-shimmer 1.2s linear infinite;
 }
 @keyframes gsi-shimmer { to { background-position: -200% 0; } }
+
+/* On phones the floating chat button + bottom nav could overlap the last cards
+   (e.g. the "Worth doing" tips). Give the page room below so nothing collides. */
+@media (max-width: 760px) {
+  .page-anim { padding-bottom: 8rem; }
+}

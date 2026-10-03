@@ -453,8 +453,11 @@ export default function Landing() {
   useEffect(() => {
     try {
       const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
+      // The native Kotlin app tags its WebView UA - it must never show the
+      // marketing index, always the welcome/app.
+      const nativeApp = /CampusCoinApp/.test(window.navigator.userAgent || '');
       const firstPhone = window.innerWidth <= 640 && !localStorage.getItem('campuscoin.welcomed');
-      if (standalone || firstPhone) {
+      if (standalone || nativeApp || firstPhone) {
         navigate('/welcome', { replace: true });
       }
     } catch { /* storage blocked - just stay on the landing */ }
