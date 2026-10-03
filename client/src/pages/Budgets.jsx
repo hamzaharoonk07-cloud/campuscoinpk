@@ -27,17 +27,16 @@ function budgetNote(budget, currency) {
  * student usually spends there (GET /budgets/suggestions), so this starts
  * from real numbers, not blank fields. Clearing a row's amount skips it.
  */
-function MultiSetForm({ month, suggestions, onSaved }) {
+function MultiSetForm({ month, options, onSaved }) {
   const toast = useToast();
   const [amounts, setAmounts] = useState({});
   const [busy, setBusy] = useState(false);
 
-  // Seed each row with its suggested amount whenever the suggestions change.
+  // Start blank - you choose which categories to cap and the amount yourself.
+  // Any usual-spend figure is shown only as a placeholder hint, never pre-filled.
   useEffect(() => {
-    const seed = {};
-    for (const s of suggestions) seed[s.categoryId] = String(s.suggested);
-    setAmounts(seed);
-  }, [suggestions]);
+    setAmounts({});
+  }, [month, options]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -60,15 +59,15 @@ function MultiSetForm({ month, suggestions, onSaved }) {
     }
   };
 
-  if (!suggestions.length) return null;
+  if (!options.length) return null;
 
   return (
     <form className="stack" onSubmit={submit}>
       <p className="small muted" style={{ margin: 0 }}>
-        Amounts are filled in from what you usually spend - change any, clear one to skip it.
+        Pick any categories and set your own caps - type an amount for the ones you want, leave the rest blank.
       </p>
       <div className="budget-multi">
-        {suggestions.map((s) => (
+        {options.map((s) => (
           <div className="budget-multi-row" key={s.categoryId}>
             <span className="budget-multi-name">
               <i className="swatch" style={{ background: slotColor(s.slot) }} />
@@ -78,6 +77,7 @@ function MultiSetForm({ month, suggestions, onSaved }) {
               type="number"
               min="0"
               inputMode="numeric"
+              placeholder={s.suggested ? `e.g. ${s.suggested}` : 'amount'}
               value={amounts[s.categoryId] ?? ''}
               onChange={(e) => setAmounts({ ...amounts, [s.categoryId]: e.target.value })}
               aria-label={`${s.name} cap`}
@@ -186,6 +186,7 @@ export default function Budgets() {
   const [month, setMonth] = useState(monthKey());
   const [data, setData] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const load = useCallback(() => {
     api
@@ -196,6 +197,10 @@ export default function Budgets() {
       .get(`/budgets/suggestions?month=${month}`)
       .then(({ suggestions: list }) => setSuggestions(list))
       .catch(() => setSuggestions([]));
+    api
+      .get('/categories')
+      .then(({ categories: list }) => setCategories(list || []))
+      .catch(() => setCategories([]));
   }, [month, toast]);
 
   useEffect(load, [load]);
@@ -219,6 +224,14 @@ export default function Budgets() {
       toast.error('Nothing to copy', err.message);
     }
   };
+
+  // Every expense category you haven't capped yet — so you can budget any of
+  // them, with or without spending history. Suggested amounts become hints only.
+  const cappedIds = new Set((data?.budgets || []).map((b) => String(b.category?._id || b.category)));
+  const suggMap = new Map(suggestions.map((s) => [String(s.categoryId), s.suggested]));
+  const capOptions = categories
+    .filter((c) => c.type === 'expense' && !c.archived && !cappedIds.has(String(c._id)))
+    .map((c) => ({ categoryId: c._id, name: c.name, slot: c.slot, suggested: suggMap.get(String(c._id)) }));
 
   return (
     <Layout
@@ -283,7 +296,7 @@ export default function Budgets() {
               <div className="empty">
                 <GaugeArt />
                 <h3>No caps set for this month</h3>
-                <p>Set caps on the right - amounts are filled in from what you usually spend, so you can set them all in one go.</p>
+                <p>Set caps on the right - pick any categories and choose your own amounts.</p>
               </div>
             ) : (
               <div className="spine">
@@ -311,14 +324,10 @@ export default function Budgets() {
               <h3>Set category caps</h3>
             </div>
             <div className="panel-body">
-              {suggestions.length ? (
-                <MultiSetForm month={month} suggestions={suggestions} onSaved={load} />
+              {capOptions.length ? (
+                <MultiSetForm month={month} options={capOptions} onSaved={load} />
               ) : (
-                <p className="muted small">
-                  {data?.budgets.length
-                    ? 'Every category with spending history already has a cap this month.'
-                    : 'Log a few transactions first - then Campus Coin can suggest caps from what you actually spend.'}
-                </p>
+                <p className="muted small">Every category already has a cap this month.</p>
               )}
               <p className="small muted" style={{ marginTop: '1rem' }}>
                 Campus Coin tells you once when you pass 80% of a cap, and once if you go over - it will not nag on every
