@@ -328,11 +328,6 @@ export default function Login() {
             {busy ? 'Signing in' : 'Sign in'}
             {busy ? null : <Icon name="arrow-ne" size={16} />}
           </button>
-
-          <button type="button" className="btn btn-block auth-demo" onClick={signInAsDemo} disabled={busy}>
-            <Icon name="user" size={16} />
-            Use the demo account
-          </button>
         </form>
         )}
 
