@@ -1637,10 +1637,9 @@ body.modal-open .chat-hint { display: none !important; }
 .google-signin-card {
   display: flex;
   justify-content: center;
-  padding: 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--surface);
+  /* No border/background - Google's own button has its own outline, so an outer
+     card made it a clunky box-in-a-box. Let the GSI button stand on its own. */
+  padding: 0;
 }
 .google-signin-card:has(.google-signin:empty) { display: none; }
 .google-signin { display: flex; justify-content: center; }
