@@ -38,6 +38,17 @@ export default function AdminStudents() {
     }
   };
 
+  const makeAdmin = async (user) => {
+    if (!window.confirm(`Make ${user.name} (${user.email}) an administrator? They'll get full admin access.`)) return;
+    try {
+      const { message } = await api.patch(`/admin/users/${user._id}/promote`, {});
+      toast.success(message);
+      load();
+    } catch (err) {
+      toast.error('Could not promote', err.message);
+    }
+  };
+
   const resetPassword = async (user) => {
     if (!window.confirm(`Issue a new temporary password for ${user.name}? Their current one stops working.`)) return;
     try {
@@ -130,6 +141,9 @@ export default function AdminStudents() {
                       </button>
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggle(user)}>
                         {user.disabled ? 'Enable' : 'Disable'}
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => makeAdmin(user)}>
+                        Make admin
                       </button>
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => resetPassword(user)}>
                         <Icon name="key" size={14} />

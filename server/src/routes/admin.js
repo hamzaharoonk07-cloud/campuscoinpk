@@ -168,6 +168,19 @@ router.patch(
   })
 );
 
+/** Promote a student to administrator (admin-only). Lets the owner grant admin
+ *  access from inside the app instead of editing the database by hand. */
+router.patch(
+  '/users/:id/promote',
+  wrap(async (req, res) => {
+    const user = await User.findOne({ _id: req.params.id, role: 'student' });
+    if (!user) return res.status(404).json({ message: 'That student was not found' });
+    user.role = 'admin';
+    await user.save();
+    res.json({ message: `${user.name} is now an administrator`, role: 'admin' });
+  })
+);
+
 /** Issues a temporary password and hands it back once, for the admin to pass on. */
 router.post(
   '/users/:id/reset-password',
