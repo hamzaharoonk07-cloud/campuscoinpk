@@ -3452,3 +3452,13 @@ body.modal-open .chat-hint { display: none !important; }
 .committee-history { margin-top: 0.75rem; font-size: var(--step--1); color: var(--muted); }
 .committee-history summary { cursor: pointer; font-weight: 600; }
 .committee-history ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+
+/* Placeholder shimmer while the Google button is still loading, so it reserves
+   its space instead of popping in late and shifting the layout. */
+.google-signin-skeleton {
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(128,128,128,0.10), rgba(128,128,128,0.20), rgba(128,128,128,0.10));
+  background-size: 200% 100%;
+  animation: gsi-shimmer 1.2s linear infinite;
+}
+@keyframes gsi-shimmer { to { background-position: -200% 0; } }

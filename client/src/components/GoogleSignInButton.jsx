@@ -35,12 +35,16 @@ export default function GoogleSignInButton({ bare = false, shape = 'rectangular'
   const navigate = useNavigate();
   const ref = useRef(null);
   const [clientId, setClientId] = useState(null);
+  // Tracks whether the "is Google configured?" check has come back yet, so we
+  // can hold the button's space with a placeholder instead of popping in late.
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     api
       .get('/auth/google-status')
       .then((d) => d.configured && setClientId(d.clientId))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setChecked(true));
   }, []);
 
   useEffect(() => {
@@ -79,6 +83,21 @@ export default function GoogleSignInButton({ bare = false, shape = 'rectangular'
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
 
+  // While we're still checking, reserve the button's height so nothing jumps.
+  if (!checked) {
+    return (
+      <>
+        {bare ? null : (
+          <div className="auth-or">
+            <span>or</span>
+          </div>
+        )}
+        <div className="google-signin-card">
+          <div className="google-signin google-signin-skeleton" aria-hidden="true" style={{ minHeight: 44 }} />
+        </div>
+      </>
+    );
+  }
   if (!clientId) return null;
   return (
     <>
@@ -88,7 +107,7 @@ export default function GoogleSignInButton({ bare = false, shape = 'rectangular'
         </div>
       )}
       <div className="google-signin-card">
-        <div className="google-signin" ref={ref} />
+        <div className="google-signin" ref={ref} style={{ minHeight: 44 }} />
       </div>
     </>
   );

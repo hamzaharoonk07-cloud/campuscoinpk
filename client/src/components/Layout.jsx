@@ -394,7 +394,7 @@ export default function Layout({ title, subtitle, crumbs, actions, children }) {
 
   const signOut = () => {
     logout();
-    navigate(isAdmin ? '/admin/login' : '/login');
+    navigate(isAdmin ? '/admin/login' : '/welcome');
   };
 
   return (
