@@ -449,6 +449,12 @@ export default function Layout({ title, subtitle, crumbs, actions, children }) {
       </nav>
 
       <div className="main">
+        {/* A branded bar with the Campus Coin logo above every page on mobile
+            (desktop already shows the logo in the side rail). */}
+        <div className="app-brandbar">
+          <BrandMark size={24} />
+          <b>Campus Coin</b>
+        </div>
         <header className="topbar">
           <div style={{ marginRight: 'auto', minWidth: 0 }}>
             {crumbs ? <div className="crumbs">{crumbs}</div> : null}

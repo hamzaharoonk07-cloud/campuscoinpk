@@ -58,10 +58,17 @@ export default function Reports() {
   const exportCsv = async () => {
     try {
       const csv = await api.text(`/transactions/export?month=${month}`);
+      const name = `campus-coin-${month}.csv`;
+      // In the native app, blob downloads don't work in the WebView - hand the CSV
+      // to the native bridge, which saves it to Downloads.
+      if (window.AndroidDownload && typeof window.AndroidDownload.saveCsv === 'function') {
+        window.AndroidDownload.saveCsv(name, csv);
+        return;
+      }
       const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `campus-coin-${month}.csv`;
+      link.download = name;
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {

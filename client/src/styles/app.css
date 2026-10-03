@@ -3517,3 +3517,27 @@ body.modal-open .chat-hint { display: none !important; }
 .is-app .page-anim > * { animation: none !important; }
 /* Expensive soft shadows toned down for smoother scrolling. */
 .is-app .d9-card { box-shadow: none !important; }
+
+/* Mobile-only branded top bar (logo + divider line) above every page. Desktop
+   shows the logo in the side rail instead. */
+.app-brandbar { display: none; }
+@media (max-width: 900px) {
+  .app-brandbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .app-brandbar b {
+    font-family: var(--font-display, Geist), sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+}
