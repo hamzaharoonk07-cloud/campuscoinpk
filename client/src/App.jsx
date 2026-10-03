@@ -51,6 +51,23 @@ function Protected({ children, admin = false }) {
   return children;
 }
 
+/** The "/" route: the marketing index on the web, but in the installed app (or a
+ *  phone's first visit) it must never show - go straight to the welcome/app. This
+ *  renders the redirect synchronously, so there's no flash of the landing page. */
+function HomeGate() {
+  let inApp = false;
+  try {
+    const standalone =
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone;
+    const nativeApp = /CampusCoinApp/.test(window.navigator.userAgent || '');
+    const firstPhone = window.innerWidth <= 640 && !localStorage.getItem('campuscoin.welcomed');
+    inApp = Boolean(standalone || nativeApp || firstPhone);
+  } catch {
+    inApp = false;
+  }
+  return inApp ? <Navigate to="/welcome" replace /> : <Landing />;
+}
+
 /** A visitor who is already signed in should not see the sign-in form again. */
 function PublicOnly({ children }) {
   const { user, loading } = useAuth();
@@ -62,7 +79,7 @@ function PublicOnly({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<HomeGate />} />
       <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
       <Route path="/forgot-password" element={<PublicOnly><ForgotPassword /></PublicOnly>} />
