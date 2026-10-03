@@ -284,6 +284,22 @@ async function checkSignIn(req, res, { adminOnly = false } = {}) {
     return null;
   }
 
+  // Demo accounts are being retired. Block demo sign-ins - but keep the demo
+  // admin usable until a real (non-demo) admin exists, so the owner can still
+  // bootstrap their own admin from it the first time.
+  if (isDemo(user)) {
+    if (user.role === 'admin') {
+      const realAdmin = await User.exists({ role: 'admin', email: { $not: /@campuscoin\.app$/i } });
+      if (realAdmin) {
+        res.status(403).json({ message: 'The demo admin is retired. Sign in with your own admin account.' });
+        return null;
+      }
+    } else {
+      res.status(403).json({ message: 'The demo accounts have been retired.' });
+      return null;
+    }
+  }
+
   // Kept for the reply, so the welcome message can say when they were last here.
   user.$locals.previousLoginAt = user.lastLoginAt || null;
   user.failedLogins = 0;
