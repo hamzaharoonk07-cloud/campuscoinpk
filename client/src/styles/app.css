@@ -3500,3 +3500,23 @@ body.modal-open .chat-hint { display: none !important; }
 .tour-btns { display: flex; gap: 0.3rem; align-items: center; }
 .tour-skip, .tour-back { background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; padding: 0.45rem 0.6rem; border-radius: 10px; cursor: pointer; }
 .tour-next { background: var(--accent); color: var(--on-accent); border: 0; font: inherit; font-weight: 600; font-size: 0.85rem; padding: 0.45rem 0.95rem; border-radius: 10px; cursor: pointer; }
+
+/* ---- Inside the native app (WebView): drop effects that make it lag ---- */
+/* backdrop-filter blur is the biggest WebView performance killer. */
+.is-app * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+/* Stop continuous/decorative animations (welcome orbit, 3D coin, pulses, scene). */
+.is-app .wl-orbit,
+.is-app .wl-counter,
+.is-app .wl-coin3d,
+.is-app .wl-coinwrap,
+.is-app .wl-pulse,
+.is-app .wl-halo::before,
+.is-app .d9-scene-rays,
+.is-app .d9-scene-halo,
+.is-app .d9-scene-body,
+.is-app .d9-star { animation: none !important; }
+/* Snappier page changes - skip the staggered entrance in the app. */
+.is-app .page-anim,
+.is-app .page-anim > * { animation: none !important; }
+/* Expensive soft shadows toned down for smoother scrolling. */
+.is-app .d9-card { box-shadow: none !important; }

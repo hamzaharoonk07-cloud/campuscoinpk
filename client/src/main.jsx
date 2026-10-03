@@ -19,6 +19,17 @@ import { installPointerEffects } from './lib/pointerEffects.js';
 
 installPointerEffects();
 
+// Inside the native Kotlin app (WebView), tag the root so CSS can drop the
+// heaviest effects (backdrop blur, continuous animations) that make a WebView
+// lag. The website in a real browser keeps them.
+try {
+  if (/CampusCoinApp/.test(navigator.userAgent || '')) {
+    document.documentElement.classList.add('is-app');
+  }
+} catch {
+  /* ignore */
+}
+
 // Register the service worker so the app is installable (Chrome needs a SW with
 // a fetch handler before it offers "Install app") and opens offline. Only in
 // production builds, so Vite's dev server isn't shadowed by a stale cache.
