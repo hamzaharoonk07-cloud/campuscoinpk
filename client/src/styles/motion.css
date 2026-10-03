@@ -402,3 +402,33 @@
   .auth-aside .eyebrow.has-rule::before { animation: none; }
   .auth-form .field:focus-within .input-icon { transform: none; }
 }
+
+/* ---- App-wide page transitions + staggered entrances --------------------- */
+.page-anim { animation: page-in 0.4s var(--ease-out) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* Direct blocks of each page cascade in. Only transform/opacity, so it stays 60fps. */
+.page-anim > * { animation: page-child 0.5s var(--ease-out) backwards; }
+.page-anim > *:nth-child(1) { animation-delay: 0.04s; }
+.page-anim > *:nth-child(2) { animation-delay: 0.09s; }
+.page-anim > *:nth-child(3) { animation-delay: 0.14s; }
+.page-anim > *:nth-child(4) { animation-delay: 0.19s; }
+.page-anim > *:nth-child(5) { animation-delay: 0.24s; }
+.page-anim > *:nth-child(6) { animation-delay: 0.29s; }
+.page-anim > *:nth-child(n+7) { animation-delay: 0.33s; }
+@keyframes page-child { from { opacity: 0; transform: translateY(14px); } }
+
+/* Stat/figure cards and list rows get a gentle lift on hover and press feedback. */
+.d9-card, .d9-stat, .stat-card { transition: transform 0.18s var(--ease-out), box-shadow 0.18s var(--ease-out); }
+@media (hover: hover) {
+  .d9-card:hover, .d9-stat:hover, .stat-card:hover { transform: translateY(-3px); }
+}
+.btn, .d9-greet-add, .btn-primary { transition: transform 0.12s var(--ease-out), filter 0.12s var(--ease-out); }
+.btn:active, .d9-greet-add:active, .btn-primary:active { transform: scale(0.97); }
+
+/* Transaction / list rows fade-rise with a light stagger when a list mounts. */
+.ledger-row, .txn-row, .udhaar-person, .cat-row, .tip-card { animation: page-child 0.45s var(--ease-out) backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-anim, .page-anim > *, .ledger-row, .txn-row, .udhaar-person, .cat-row, .tip-card { animation: none !important; }
+}

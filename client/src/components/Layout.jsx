@@ -355,6 +355,7 @@ function ChatLauncher() {
 }
 
 export default function Layout({ title, subtitle, crumbs, actions, children }) {
+  const pageLocation = useLocation();
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -471,7 +472,9 @@ export default function Layout({ title, subtitle, crumbs, actions, children }) {
               </Link>
             </div>
           ) : null}
-          {children}
+          <div className="page-anim" key={pageLocation.pathname}>
+            {children}
+          </div>
         </main>
       </div>
 
