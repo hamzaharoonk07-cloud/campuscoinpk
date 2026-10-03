@@ -6,7 +6,10 @@ export const JWT_SECRET = process.env.JWT_SECRET || 'campus-coin-dev-secret-chan
 // The token carries the account's session version (`v`), so raising the
 // version on the account ends every session that was signed in before it.
 export const signToken = (user) =>
-  jwt.sign({ id: user._id, role: user.role, v: user.tokenVersion || 0 }, JWT_SECRET, { expiresIn: '7d' });
+  // Long-lived so the installed app keeps you signed in until you sign out (or
+  // change password / "sign out everywhere", which bump tokenVersion). The
+  // WebView persists the token, so there's no repeated login.
+  jwt.sign({ id: user._id, role: user.role, v: user.tokenVersion || 0 }, JWT_SECRET, { expiresIn: '365d' });
 
 async function userFromRequest(req) {
   const header = req.headers.authorization || '';
