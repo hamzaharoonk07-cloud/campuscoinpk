@@ -17,34 +17,15 @@
    - Reduced motion: everything renders in its finished state.
    Hard-coded (no token fit on this dark surface): bg #09090c, greens/mints/blue/
    amber per welcome.css header. */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-/* Scales a step's content down to fit the screen when it is taller than the
-   viewport, so every step fills the screen with no scroll and nothing cut. */
+/* Each step scrolls if it is taller than the screen, so nothing is ever cut;
+   short steps fill the screen with the footer pinned to the bottom. */
 function FitStep({ children }) {
-  const wrap = useRef(null);
-  const inner = useRef(null);
-  const [scale, setScale] = useState(1);
-  useLayoutEffect(() => {
-    const fit = () => {
-      if (!wrap.current || !inner.current) return;
-      const avail = wrap.current.clientHeight;
-      const natural = inner.current.scrollHeight;
-      setScale(natural > avail + 1 ? Math.max(0.5, avail / natural) : 1);
-    };
-    const raf = requestAnimationFrame(fit);
-    let ro;
-    if (window.ResizeObserver && inner.current) { ro = new ResizeObserver(fit); ro.observe(inner.current); }
-    window.addEventListener('resize', fit);
-    const t = setTimeout(fit, 400); // after entrance animation / fonts
-    return () => { cancelAnimationFrame(raf); clearTimeout(t); ro && ro.disconnect(); window.removeEventListener('resize', fit); };
-  });
   return (
-    <div className="wl-step" ref={wrap}>
-      <div className="wl-scale" ref={inner} style={{ transform: scale < 1 ? `scale(${scale})` : undefined, transformOrigin: 'top center' }}>
-        {children}
-      </div>
+    <div className="wl-step">
+      <div className="wl-scale">{children}</div>
     </div>
   );
 }

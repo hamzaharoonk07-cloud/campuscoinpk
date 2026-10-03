@@ -37,9 +37,9 @@
 /* Fit-to-screen: the step is a fixed-height box; its content (.wl-fit) is scaled
    down by JS (FitStep) when taller than the box, so each step fills the screen
    with no scroll and nothing cut. */
-.wl-step { position: relative; z-index: 1; flex: 1; min-height: 0; overflow: hidden; }
-.wl-scale { width: 100%; height: 100%; }
-.wl-fit { display: flex; flex-direction: column; min-height: 100%; }
+.wl-step { position: relative; z-index: 1; flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.wl-scale { width: 100%; min-height: 100%; display: flex; flex-direction: column; }
+.wl-fit { flex: 1; display: flex; flex-direction: column; min-height: 100%; }
 .wl-fit.is-enter { animation: wl-stepin .5s cubic-bezier(.16,1,.3,1) both; }
 @keyframes wl-stepin { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
 
