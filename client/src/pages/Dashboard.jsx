@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Layout, { MonthPicker, openChat } from '../components/Layout.jsx';
 import Icon from '../components/Icon.jsx';
 import TransactionForm, { Modal } from '../components/TransactionForm.jsx';
@@ -362,6 +362,18 @@ export default function Dashboard() {
   // A quick-add button opens the form already filled in.
   const [preset, setPreset] = useState(null);
   const [upcoming, setUpcoming] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // The Android app's home-screen widget opens /dashboard?add=1 to jump straight
+  // into logging a transaction; honour it once, then drop the param.
+  useEffect(() => {
+    if (searchParams.get('add') === '1') {
+      setAdding(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('add');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const load = useCallback(() => {
     api
